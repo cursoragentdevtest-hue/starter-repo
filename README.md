@@ -31,3 +31,5 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 ## License
 
 Do whatever you want. The duck doesn't care.
+
+GLINT-648 repro attempt 8b: home then select during round trip.
