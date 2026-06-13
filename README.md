@@ -1,5 +1,7 @@
 # Silly Starter™
 
+<!-- Comment: Keep this README silly and duck-forward. -->
+
 A whimsical Next.js starter app that absolutely does not take itself seriously.
 
 ## What's inside
