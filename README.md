@@ -35,3 +35,5 @@ Do whatever you want. The duck doesn't care.
 benny-windown-check-AFTER
 
 benny-windown-check-AFTER-2
+
+benny-windown-check-BEFORE
