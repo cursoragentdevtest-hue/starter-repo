@@ -1,4 +1,5 @@
 import { DuckButton } from "@/components/DuckButton";
+import { GreenSquare } from "@/components/GreenSquare";
 import { RedSquare } from "@/components/RedSquare";
 import { SillyFacts } from "@/components/SillyFacts";
 
@@ -25,7 +26,10 @@ export default function Home() {
           </p>
         </div>
 
-        <RedSquare />
+        <div className="flex items-center gap-4">
+          <RedSquare />
+          <GreenSquare />
+        </div>
 
         <DuckButton />
 
