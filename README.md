@@ -31,3 +31,11 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 ## License
 
 Do whatever you want. The duck doesn't care.
+
+benny-windown-check-AFTER
+
+benny-windown-check-AFTER-2
+
+benny-windown-check-BEFORE
+
+benny-windown-check-AFTER3
