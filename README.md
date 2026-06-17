@@ -1,5 +1,7 @@
 # Silly Starter™
 
+<!-- Comment: Keep this README silly and duck-forward. -->
+
 A whimsical Next.js starter app that absolutely does not take itself seriously.
 
 ## What's inside
@@ -31,3 +33,5 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 ## License
 
 Do whatever you want. The duck doesn't care.
+
+Test edit for review sync
