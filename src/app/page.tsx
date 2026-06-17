@@ -3,6 +3,7 @@ import { DuckButton } from "@/components/DuckButton";
 import { GreenSquare } from "@/components/GreenSquare";
 import { RedSquare } from "@/components/RedSquare";
 import { SillyFacts } from "@/components/SillyFacts";
+import { YellowSquare } from "@/components/YellowSquare";
 
 export default function Home() {
   return (
@@ -31,6 +32,7 @@ export default function Home() {
           <RedSquare />
           <GreenSquare />
           <BlueSquare />
+          <YellowSquare />
         </div>
 
         <DuckButton />
