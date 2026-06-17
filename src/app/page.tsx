@@ -1,4 +1,5 @@
 import { DuckButton } from "@/components/DuckButton";
+import { RedSquare } from "@/components/RedSquare";
 import { SillyFacts } from "@/components/SillyFacts";
 
 export default function Home() {
@@ -23,6 +24,8 @@ export default function Home() {
             A Next.js app that absolutely does not take itself seriously.
           </p>
         </div>
+
+        <RedSquare />
 
         <DuckButton />
 
