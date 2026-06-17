@@ -1,3 +1,4 @@
+import { BlueSquare } from "@/components/BlueSquare";
 import { DuckButton } from "@/components/DuckButton";
 import { GreenSquare } from "@/components/GreenSquare";
 import { RedSquare } from "@/components/RedSquare";
@@ -29,6 +30,7 @@ export default function Home() {
         <div className="flex items-center gap-4">
           <RedSquare />
           <GreenSquare />
+          <BlueSquare />
         </div>
 
         <DuckButton />
