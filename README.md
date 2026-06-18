@@ -33,3 +33,4 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 Do whatever you want. The duck doesn't care.
 
 Repro test line
+hello from the agent
