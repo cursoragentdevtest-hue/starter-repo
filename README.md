@@ -62,6 +62,31 @@ If you already ran through [Setup](#setup), press the duck. That's basically the
 | `npm run start`| Run production build      |
 | `npm run lint` | Lint (the duck is exempt) |
 
+## Dependencies
+
+All packages are defined in `package.json`.
+
+### Production
+
+| Package     | Version  | Purpose                          |
+| ----------- | -------- | -------------------------------- |
+| `next`      | 16.2.9   | React framework and App Router   |
+| `react`     | 19.2.4   | UI library                       |
+| `react-dom` | 19.2.4   | React DOM renderer               |
+
+### Development
+
+| Package               | Version  | Purpose                              |
+| --------------------- | -------- | ------------------------------------ |
+| `@tailwindcss/postcss`| ^4       | Tailwind CSS PostCSS integration     |
+| `@types/node`         | ^20      | TypeScript types for Node.js         |
+| `@types/react`        | ^19      | TypeScript types for React           |
+| `@types/react-dom`    | ^19      | TypeScript types for React DOM       |
+| `eslint`              | ^9       | JavaScript/TypeScript linter         |
+| `eslint-config-next`  | 16.2.9   | Next.js ESLint rules                 |
+| `tailwindcss`         | ^4       | Utility-first CSS framework          |
+| `typescript`          | ^5       | Static type checking                 |
+
 ## License
 
 Do whatever you want. The duck doesn't care.
