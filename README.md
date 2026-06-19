@@ -10,14 +10,48 @@ A whimsical Next.js starter app that absolutely does not take itself seriously.
 - **Tailwind CSS** (duck approved)
 - One very clickable duck
 
-## Get started
+## Setup
+
+### Prerequisites
+
+- **Node.js 20+** — the duck runs on modern JavaScript
+- **npm** — bundled with Node.js; no exotic package managers required
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   cd starter-repo
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Production build
+
+To verify the app builds for production:
 
 ```bash
-npm install
-npm run dev
+npm run build
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and press the duck. That's basically the whole product roadmap.
+## Get started
+
+If you already ran through [Setup](#setup), press the duck. That's basically the whole product roadmap.
 
 ## Scripts
 
