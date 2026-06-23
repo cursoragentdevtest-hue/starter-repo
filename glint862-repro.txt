@@ -1,1 +1,9 @@
-repro test
+GLINT-862 repro: Ctrl+, after submit should open Settings immediately.
+
+Steps:
+1. Open the app and focus the submit composer.
+2. Type a message and press Submit (or Enter).
+3. Immediately press Ctrl+, (Cmd+, on macOS).
+
+Expected: Settings opens right away, even though the composer still has focus.
+Fix: register the shortcut on window in capture phase so focused inputs cannot swallow it.
