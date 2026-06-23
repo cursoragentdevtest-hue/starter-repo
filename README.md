@@ -28,6 +28,10 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 | `npm run start`| Run production build      |
 | `npm run lint` | Lint (the duck is exempt) |
 
+## Health check
+
+`GET /health` returns `200` with `{ "status": "ok" }`. `HEAD /health` returns `200` with no body for status-only probes.
+
 ## License
 
 Do whatever you want. The duck doesn't care.
