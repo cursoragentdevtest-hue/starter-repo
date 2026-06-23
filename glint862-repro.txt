@@ -1,1 +1,9 @@
-repro test
+GLINT-862 repro: Pressing Ctrl+, after submit. Settings should open immediately.
+
+Steps:
+1. npm run dev
+2. Type a message in the GLINT-862 repro composer and submit (Enter or Submit).
+3. Immediately press Ctrl+, (Cmd+, on macOS).
+4. Expected: Settings opens on the first keypress with no delay.
+
+Fix: register the settings shortcut on window capture so it still fires right after submit blurs the composer.
