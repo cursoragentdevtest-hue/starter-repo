@@ -13,6 +13,8 @@ const FACTS = [
   "This starter repo is 90% whimsy, 10% dependencies.",
 ];
 
+// harmless demo comment
+
 export function SillyFacts() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);

@@ -1,6 +1,8 @@
 import { DuckButton } from "@/components/DuckButton";
 import { SillyFacts } from "@/components/SillyFacts";
 
+// harmless demo comment
+
 export default function Home() {
   return (
     <div className="relative flex min-h-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 px-6 py-16 dark:from-amber-950 dark:via-orange-950 dark:to-yellow-950">
