@@ -1,3 +1,5 @@
+<!-- hello from the web -->
+
 # Silly Starter™
 
 A whimsical Next.js starter app that absolutely does not take itself seriously.
