@@ -1,3 +1,4 @@
+// Short unique 08-target comment.
 // Unique prepended comment for 08-target fixture.
 export const target01 = "updated target 01";
 export const target02 = "updated target 02";
