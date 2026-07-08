@@ -1,3 +1,4 @@
+// Unique prepended comment for 08-target fixture.
 export const target01 = "target 01";
 export const target02 = "target 02";
 export const target03 = "target 03";
