@@ -34,3 +34,7 @@ Do whatever you want. The duck doesn't care.
 
 Repro test line
 glint1485 merge verify A
+
+## Fun fact
+
+Penguins can drink saltwater — special glands near their eyes filter out the salt so they stay hydrated at sea.
