@@ -166,8 +166,28 @@ export const encyclopediaSections: EncyclopediaSection[] = [
     ],
   },
   {
-    id: "continuation",
+    id: "databases",
     volume: "Vol. XII",
+    title: "Databases: promises about memory that outlive process restarts",
+    lede: "A database is a machine for turning reads and writes into durable, queryable structure under concurrency and failure.",
+    image: {
+      src: "/images/section-databases.jpg",
+      alt: "Server racks and network cabling representing data infrastructure",
+    },
+    body: [
+      "Start with the problem: memory disappears when power blinks, and multiple clients want to mutate the same records at once without trampling one another. Files alone are not enough; you need indexing, a schema (explicit or implicit), a concurrency control strategy, and a recovery story when the plug pulls mid-write.",
+      "Relational systems organize data into tables with rows and columns, relate those rows with keys, and answer questions with a declarative language (SQL) that lets the optimizer choose the plan. ACID transactions give you a vocabulary for correctness: atomicity, consistency, isolation, durability. Two-phase locking, MVCC, and snapshot isolation are different answers to the question, “how do we let many writers overlap without pretending time doesn’t exist?”",
+      "Indexes are tradeoffs in steel: faster reads for certain predicates at the cost of slower writes and more space. B-trees are the generalist’s friend for range queries; LSM trees bias toward fast sequential writes with compaction later. A well-placed composite index can make a query linear-time in the selectivity you actually care about, not in the whole table.",
+      "Distributed databases stretch these promises across machines that fail independently. Replication keeps extra copies; consensus (Raft, Paxos) lets a cluster agree on an order of operations; partitioning (sharding) spreads load by key. The CAP theorem does not give you license to be vague — it forces you to say which failure modes you tolerate and which behaviors you keep during network partitions.",
+      "NoSQL systems are not one thing but many: key/value stores for caching or session state, document stores for flexible aggregates, wide-column stores for time series and sparse data, graph databases for traversals that would be contortions in SQL. Each cheats on some relational convenience to simplify the dominant access pattern. The wise choice follows the queries, not the marketing.",
+      "Durability depends on write-ahead logs, checkpoints, and careful fsync discipline. Crash recovery replays intent until the on-disk structures are internally consistent again. Hot paths are engineered to avoid partial-state hazards; background work cleans up debts like compactions and vacuuming. Corruption bugs are expensive because they turn yesterday’s truth into today’s unreadable bytes.",
+      "At scale, the hardest problems are mundane: backfills that must not starve online traffic, schema migrations that roll forward without downtime, query plans that go quadratic after a statistics drift. Observability (slow query logs, histograms, per-table and per-index metrics) is not garnish — it is the steering wheel.",
+      "Continua places databases beside operating systems for a reason: both are about polite lies that let many programs pretend they are alone while a shared machine keeps its promises. The minute details — latch contention, vacuum thresholds, quorum sizes — matter because they are where promises are either kept or leaked.",
+    ],
+  },
+  {
+    id: "continuation",
+    volume: "Vol. XIII",
     title: "The next section is already implied",
     lede: "If you have reached this far, the design worked: one more doorway appears because you expected it to.",
     body: [
