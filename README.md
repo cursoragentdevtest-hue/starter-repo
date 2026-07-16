@@ -1,6 +1,6 @@
 # Silly Starter™
 
-A whimsical Next.js starter app that absolutely does not take itself seriously.
+A whimsical Next.js starter app for experiments that still refuses to take itself seriously.
 
 ## What's inside
 
