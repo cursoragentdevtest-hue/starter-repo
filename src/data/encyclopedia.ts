@@ -146,8 +146,28 @@ export const encyclopediaSections: EncyclopediaSection[] = [
     ],
   },
   {
-    id: "continuation",
+    id: "operating-systems",
     volume: "Vol. XI",
+    title: "Operating systems as permission machines",
+    lede: "An operating system is the layer that turns a pile of silicon into a place where programs can run without constantly negotiating with bare metal.",
+    image: {
+      src: "/images/section-computing.jpg",
+      alt: "Rows of server racks with blinking indicator lights in a data center",
+    },
+    body: [
+      "At the bottom, hardware exposes interrupts, timers, memory buses, and storage controllers — fast, literal, and unforgiving. The kernel sits above that hardware and below ordinary applications, translating requests into safe sequences of machine operations. When you open a file, send a packet, or allocate memory, you are almost always asking the kernel to enforce a contract on your behalf.",
+      "Processes are the kernel’s unit of isolation. Each process receives an address space that pretends to be a private warehouse of memory, even though physical RAM is shared. The memory management unit maps virtual addresses to physical frames, and the kernel decides which pages stay resident, which get swapped to disk, and which belong to another process entirely. A segmentation fault is not melodrama; it is the kernel refusing a lie about memory that does not belong to you.",
+      "Scheduling is how the kernel shares time. A runnable thread is work waiting for a CPU core. Preemptive schedulers interrupt long-running tasks so interactive programs remain responsive; real-time schedulers prioritize deadlines over fairness. Context switches are expensive in the small — registers saved, caches cooled — but cheap compared with letting every program run until it voluntarily yields in a world full of buggy loops.",
+      "System calls are the deliberate gate. User programs run in a restricted mode; privileged instructions belong to the kernel. Opening a socket, mapping a page, or creating a child process crosses that boundary through a numbered syscall interface whose stability is part of the platform’s promise. That boundary is why an operating system is not merely a library: it is law with an enforcement arm.",
+      "Filesystems and block devices add another translation layer. Bytes on a spinning disk or flash chip arrive in sectors; filesystems arrange them into names, directories, permissions, and atomic rename operations. Journaling and copy-on-write filesystems trade extra writes for recoverability after power loss. The sense that ignites serious study here is noticing how much reliability is engineered above hardware that would otherwise forget your last half-second.",
+      "Concurrency inside the kernel — locks, wait queues, RCU, work queues — is its own discipline. Deadlocks happen when threads wait on one another in a circle; priority inversion happens when a low-priority holder blocks a high-priority waiter. Operating systems textbooks spend chapters on these pathologies because production kernels must survive them under load, not merely avoid them in homework.",
+      "From batch mainframes to time-sharing minicomputers to personal computers to phones and cloud VMs, the same problem repeats at new scales: multiplex scarce resources, isolate failure, and expose a stable surface for software written by strangers. Containers and virtual machines are not replacements for that problem; they are additional fences built on top of kernels that already learned to lie politely about hardware.",
+      "Continua keeps operating systems beside cities and oceans because infrastructure thinking rhymes across domains. Pipes leak, zoning conflicts, packet queues fill, and page tables fragment. The intellectual spark is recognizing the pattern: every OS is a municipal government for electricity measured in nanoseconds.",
+    ],
+  },
+  {
+    id: "continuation",
+    volume: "Vol. XII",
     title: "The next section is already implied",
     lede: "If you have reached this far, the design worked: one more doorway appears because you expected it to.",
     body: [
