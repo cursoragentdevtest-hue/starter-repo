@@ -403,12 +403,27 @@ a {
 }
 
 @media (max-width: 640px) {
+  .hero {
+    align-items: end;
+    padding-top: 1.25rem;
+  }
+
   .hero-content {
-    margin-bottom: 3.25rem;
+    width: min(720px, calc(100% - 2rem));
+    margin: 0 1rem 2.75rem;
   }
 
   .hero-brand {
-    font-size: clamp(2.8rem, 18vw, 4rem);
+    margin-bottom: 0.75rem;
+    font-size: clamp(2.35rem, 13vw, 3.1rem);
+  }
+
+  .hero-headline {
+    max-width: 16ch;
+  }
+
+  .hero-support {
+    font-size: 0.98rem;
   }
 
   .volume-nav-list a {
