@@ -1,3 +1,4 @@
+<!-- One-line note: maintained as a whimsical Next.js starter. -->
 # Silly Starter™
 
 A whimsical Next.js starter app that absolutely does not take itself seriously.
