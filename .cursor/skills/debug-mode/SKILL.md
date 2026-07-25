@@ -101,6 +101,10 @@ Create the parent directory once if it is missing, but **never create the log
 file itself** — the first append creates it. A missing file is meaningful
 evidence that the instrumented code never ran.
 
+A log that already exists at the start of a session is left over from a previous
+one. Delete it before your first run — but say in your report that you did, since
+it discards someone else's evidence.
+
 **Clear the log before every reproduction run** by deleting it with the file
 deletion tool, not with `rm`, `truncate`, `touch`, or shell redirection.
 Deleting guarantees the next read contains only the current run, so you never
@@ -118,6 +122,13 @@ for a manual delete and wait rather than reading a mixed file.
 | `hypothesisId` | string | `"A"`, `"B"`, ... A site covering several uses a comma string: `"A,C"` |
 | `id` | string | Optional. `log_<epoch_seconds>_<short_random>`. Useful when many entries share a location |
 | `runId` | string | Optional. `"post-fix"` on verification rounds; absent means baseline |
+
+`location` records where the log was *inserted*. Once a fix shifts lines around,
+do not go back and renumber it — that would be an edit to frozen instrumentation
+(prohibition 3), and cited evidence is understood to refer to insertion-time
+positions. Adding or updating `runId` is the one sanctioned exception to that
+freeze; if you would rather not touch the snippets at all, a cleared log already
+separates the runs on its own.
 
 ```json
 {"timestamp":1733456789012,"location":"session.ts:88","message":"token refresh branch taken","data":{"userId":5,"expiresIn":-3,"hasRefreshToken":true,"branch":"refresh"},"hypothesisId":"B"}
@@ -147,8 +158,9 @@ Keep each snippet on one physical line, however ugly. Multi-line instrumentation
 invites accidental edits to the surrounding logic and makes diffs harder to read.
 
 Per-language snippets and transport notes for browser JavaScript, Python, Go,
-Ruby, PHP, Java, Rust, and shell live in `references/instrumentation-snippets.md`.
-Read it when instrumenting anything other than Node.
+Ruby, PHP, Java, Rust, and shell are bundled alongside this file in
+`references/instrumentation-snippets.md`. Read it when instrumenting anything
+other than Node.
 
 ### Placement
 
@@ -164,6 +176,11 @@ a single run, rather than testing them serially. Candidate positions:
 
 Every log carries a `hypothesisId`. If you cannot say which hypothesis a
 proposed log tests, it is noise — drop it.
+
+If a branch you instrumented never executed, do not settle for inferring its
+behaviour from surrounding values. Construct a scenario that drives it — an
+oversell, an empty input, an expired token — and run again. A branch verdict
+based on a log line from that branch is worth far more than one reasoned around it.
 
 Prefer boundaries: function edges, module seams, network and serialisation
 points. Bugs concentrate where assumptions change hands, and boundary logs stay
@@ -192,6 +209,13 @@ Keep the fix minimal and targeted:
 
 Leave the instrumentation in the tree alongside the fix. The fix round and the
 cleanup round are separate.
+
+Do not let the frozen-instrumentation rule dictate the shape of the fix. If the
+right fix wraps the critical section in a lock, a `try`/`finally`, or a callback,
+write it that way and let the enclosed log lines re-indent. Prohibition 3 targets
+semantic changes to instrumentation — moving it, rewording it, deleting it — not
+whitespace reflow forced by the surrounding edit. Choosing a worse fix to avoid
+disturbing a log line is the tail wagging the dog.
 
 ## Verification and cleanup
 
@@ -232,14 +256,28 @@ ran, what never ran at all>
 <instrumentation added or fix applied, by file; state explicitly whether this
 round contains a fix or is instrumentation-only>
 
-## Reproduction steps
-1. <numbered, literal commands or UI actions>
+## Next steps
+1. <numbered, literal commands or UI actions to run next>
 2. ...
 <plus which services must be restarted or rebuilt for the new code to load>
 ```
 
 Three things must always be present: a per-hypothesis verdict with cited
-evidence, whether a fix was attempted this round, and numbered next steps.
+evidence, whether a fix was attempted this round, and numbered next steps. On
+investigation rounds "next steps" are the reproduction steps; on the final round
+they are the commands that re-confirm the fix.
+
+The final round appends two more sections:
+
+```
+## Verification
+<before/after log lines quoted side by side, showing the specific change the
+fix predicted>
+
+## Cleanup
+<the confirming tag search returning nothing, plus a one- or two-line
+plain-language statement of what the bug was and what the fix does>
+```
 
 **Always state the restart or rebuild requirement.** Omitting it is the single
 most common cause of an empty log file.
