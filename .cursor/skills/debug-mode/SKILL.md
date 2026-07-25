@@ -49,7 +49,10 @@ it is going badly.
 ## Hypotheses
 
 Generate **3-5 per round**, and bias toward more rather than fewer. Each must
-name a specific causal mechanism, not an area of suspicion.
+name a specific causal mechanism, not an area of suspicion. The floor applies to
+rounds that open a fresh line of inquiry; a narrow follow-up that only drives an
+unexecuted branch or resolves one open question continues the current round
+rather than padding itself out to three.
 
 - Good: "the refresh guard compares seconds against a millisecond expiry, so it never fires"
 - Bad: "something wrong with auth"
@@ -78,6 +81,10 @@ be working on `K` through `N`.
 
 `INCONCLUSIVE` is a common and legitimate outcome. Report it honestly; never
 round it to `REJECTED`.
+
+An expected line that is *absent* is valid `REJECTED` evidence, but only when
+other logs prove the surrounding path ran. If you cannot tell whether the code
+executed at all, the verdict is `INCONCLUSIVE`.
 
 **Confidence** is qualitative — `high`, `medium`, or `low` — and is required on
 every hypothesis still in play, meaning anything `CONFIRMED` or `INCONCLUSIVE`.
@@ -112,7 +119,9 @@ it before your first run and note that you did.
 
 Because there is one path, only one run's data exists on disk at a time. To
 compare two scenarios, use `runId` to label them; it distinguishes any pair of
-runs, not just baseline from post-fix.
+runs, not just baseline from post-fix. If a second debug session could be running
+on the same machine, add a session suffix to the filename so the two do not
+interleave.
 
 **Clear the log before every reproduction run** by deleting it with the file
 deletion tool, not with `rm`, `truncate`, `touch`, or shell redirection.
@@ -127,7 +136,7 @@ for a manual delete and wait rather than reading a mixed file.
 | `timestamp` | number | Epoch **milliseconds**, integer. Not ISO-8601 — integers sort and diff trivially |
 | `location` | string | `"<filename>:<line>"`, e.g. `"session.ts:88"`. Bare filename, written literally at insertion time, not computed at runtime |
 | `message` | string | Short present-tense phrase describing the moment |
-| `data` | object | Always an object, never a scalar or array. Holds the runtime values |
+| `data` | object | The top-level value is always an object, never a scalar or array; nested arrays inside it are fine. Holds the runtime values |
 | `hypothesisId` | string | `"A"`, `"B"`, ... A site covering several uses a comma string: `"A,C"` |
 | `id` | string | Optional. `log_<epoch_seconds>_<short_random>`. Useful when many entries share a location |
 | `runId` | string | Optional label for the run — `"post-fix"` on verification rounds, or any scenario name. Absent means baseline |
@@ -255,7 +264,7 @@ disappear for unrelated reasons.
 Cleanup is its own final step:
 
 1. Search the `agent log` tag and remove every wrapped region.
-2. Delete anything else the investigation created — scenario drivers written to exercise a branch, scratch fixtures, temporary config. The tag search cannot find these, so track them as you create them and list them in the report.
+2. Delete anything else the investigation created — scenario drivers written to exercise a branch, scratch fixtures, temporary config, and build byproducts such as `__pycache__` or compiled output. The tag search cannot find these, so track them as you create them and list them in the report.
 3. Re-run the search to confirm it returns nothing.
 4. Delete the log file. Your report is the durable artifact; the log is scratch, and every line you rely on should already be quoted in it.
 5. Give a one- or two-line plain-language statement of what the bug was and what the fix does.
@@ -352,7 +361,7 @@ frequently explain otherwise-baffling logs, so factor them into the analysis.
 3. **Never remove or alter instrumentation** before post-fix logs are analysed and the issue is confirmed resolved. This includes tidying, rewording, or relocating it — previously added logs are frozen until cleanup.
 4. **Never treat clearing the log as removing instrumentation.** They are unrelated; deleting the file between runs is routine and required.
 5. **Never clear the log with shell commands.** Use the file deletion tool only.
-6. **Never create the log file manually.** It appears on first append.
+6. **Never pre-create the log file yourself** — no `touch`, no scaffolding write, no header line. It appears when instrumentation first appends to it, which is why append-mode `open` in the snippets is fine.
 7. **Never use `sleep`, `setTimeout`, artificial delays, retry loops, or polling as a fix.** A timing hack conceals a missing dependency, lifecycle hook, event, or await. Fix the ordering, not the clock — even when the delay demonstrably makes the symptom go away.
 8. **Never log secrets or personal data** — tokens, passwords, API keys, session cookies, connection strings, PII. Log presence, length, or shape instead: `{"hasToken":true,"len":128}`. The log is read back into the conversation, so anything written to it is disclosed.
 9. **Never claim verification without citing specific log lines** in a before/after comparison.

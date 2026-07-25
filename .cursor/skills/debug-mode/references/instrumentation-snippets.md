@@ -26,6 +26,7 @@ module's top-level scope or a signal handler.
 - Single-line `O_APPEND` writes are atomic enough for concurrent processes sharing one file, which is what makes a single path viable across a server, a worker, and a test harness at once.
 - Prefer synchronous writes. An async write can lose the last entries when the process exits or crashes — precisely the moment that matters.
 - Errors are deliberately swallowed so instrumentation can never change control flow.
+- Log primitives, not live objects. Serialisers raise on values they cannot encode — a socket, an ORM row, a circular reference — and a throwing log violates the behaviour-neutrality rule. Pull out the specific fields you need, or pass a fallback encoder (`json.dumps(..., default=repr)` in Python, a `replacer` in `JSON.stringify`).
 
 ## Node
 
