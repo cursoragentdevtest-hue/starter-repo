@@ -35,6 +35,7 @@ wrong are the reason this mode exists.
 
 ## The loop
 
+0. **Confirm the symptom.** Run the reproduction once, uninstrumented, to check the bug behaves as reported. This is the one run that happens before instrumenting.
 1. **Explore and hypothesise.** Build context, then write down 3-5 competing hypotheses.
 2. **Instrument.** Add 3-8 tagged log writes chosen so one run discriminates between all of them.
 3. **Clear and reproduce.** Delete the log file, then run the reproduction.
@@ -61,9 +62,11 @@ evidence that moved it. Keep the table in your replies rather than in a scratch
 file — a file in the repo is one more thing to clean up, and it drifts from what
 the reader has actually seen.
 
-**Ids** are single uppercase letters, `A` through `E`. Once assigned, an id is
-never reused or renumbered; later rounds continue the sequence so that
-`hypothesisId` values in the log file stay unambiguous for the whole session.
+**Ids** are single uppercase letters assigned in sequence — `A`, `B`, `C`, and
+onward through the alphabet. Once assigned, an id is never reused or renumbered;
+later rounds continue the sequence rather than restarting, so `hypothesisId`
+values in the log stay unambiguous for the whole session. A third round may well
+be working on `K` through `N`.
 
 **Status** is exactly one of three values:
 
@@ -76,9 +79,11 @@ never reused or renumbered; later rounds continue the sequence so that
 `INCONCLUSIVE` is a common and legitimate outcome. Report it honestly; never
 round it to `REJECTED`.
 
-**Confidence** is qualitative — `high`, `medium`, or `low` — and attaches to the
-leading root-cause candidate. Avoid invented percentages, which imply a
-calibration that does not exist. Confidence is not the fix gate; see below.
+**Confidence** is qualitative — `high`, `medium`, or `low` — and is required on
+every hypothesis still in play, meaning anything `CONFIRMED` or `INCONCLUSIVE`.
+A `REJECTED` hypothesis needs no confidence; write `—`. Avoid invented
+percentages, which imply a calibration that does not exist. Confidence is not the
+fix gate; see below.
 
 ## Instrumentation
 
@@ -101,9 +106,13 @@ Create the parent directory once if it is missing, but **never create the log
 file itself** — the first append creates it. A missing file is meaningful
 evidence that the instrumented code never ran.
 
-A log that already exists at the start of a session is left over from a previous
-one. Delete it before your first run — but say in your report that you did, since
-it discards someone else's evidence.
+A log that already exists at the start of a session is left over from an
+interrupted one — a completed session deletes its own log during cleanup. Delete
+it before your first run and note that you did.
+
+Because there is one path, only one run's data exists on disk at a time. To
+compare two scenarios, use `runId` to label them; it distinguishes any pair of
+runs, not just baseline from post-fix.
 
 **Clear the log before every reproduction run** by deleting it with the file
 deletion tool, not with `rm`, `truncate`, `touch`, or shell redirection.
@@ -121,7 +130,7 @@ for a manual delete and wait rather than reading a mixed file.
 | `data` | object | Always an object, never a scalar or array. Holds the runtime values |
 | `hypothesisId` | string | `"A"`, `"B"`, ... A site covering several uses a comma string: `"A,C"` |
 | `id` | string | Optional. `log_<epoch_seconds>_<short_random>`. Useful when many entries share a location |
-| `runId` | string | Optional. `"post-fix"` on verification rounds; absent means baseline |
+| `runId` | string | Optional label for the run — `"post-fix"` on verification rounds, or any scenario name. Absent means baseline |
 
 `location` records where the log was *inserted*. Once a fix shifts lines around,
 do not go back and renumber it — that would be an edit to frozen instrumentation
@@ -192,6 +201,19 @@ Instrumentation must be a strict no-op on behaviour: it must never throw, never
 alter control flow, never mutate state, and never evaluate an expression with
 side effects (no logging a generator or a lazily-computed property).
 
+Synchronous file writes are behaviour-neutral in the sense that matters for most
+bugs, but they are not free in *time* — and timing is exactly what race
+conditions and async ordering bugs turn on. **After instrumenting, re-run and
+confirm the symptom still reproduces**, then say so in your report. If the bug
+disappears once the logs are in, you have learned something real: the window is
+narrow. Do not conclude it is fixed. Cut the log count, move writes out of the
+critical section, or buffer in memory and flush at exit.
+
+Insert all of a round's logs in a single pass rather than one edit at a time,
+then grep the file to confirm each recorded `location` matches where the line
+actually sits. Sequential insertions shift every site below them, so
+incrementally added labels drift.
+
 ## Fixing
 
 The gate is binary, not probabilistic: **write a fix only when the logs make the
@@ -230,9 +252,14 @@ Conclude only when all of these hold:
 A passing test or an absent error message is **not** sufficient — symptoms
 disappear for unrelated reasons.
 
-Cleanup is its own final step: search the `agent log` tag, remove every wrapped
-region, re-run the search to confirm it returns nothing, then give a one- or
-two-line plain-language statement of what the bug was and what the fix does.
+Cleanup is its own final step:
+
+1. Search the `agent log` tag and remove every wrapped region.
+2. Delete anything else the investigation created — scenario drivers written to exercise a branch, scratch fixtures, temporary config. The tag search cannot find these, so track them as you create them and list them in the report.
+3. Re-run the search to confirm it returns nothing.
+4. Delete the log file. Your report is the durable artifact; the log is scratch, and every line you rely on should already be quoted in it.
+5. Give a one- or two-line plain-language statement of what the bug was and what the fix does.
+
 Skipping the confirming search is the main way stray instrumentation escapes.
 
 ## Report format
@@ -245,6 +272,8 @@ the reader may not have followed the intermediate work.
 Opening line: the outcome — root cause found, or which hypotheses survived.
 
 ## Hypotheses
+<id, mechanism, status, confidence, deciding log line — as a table or a flat
+list, whichever reads better at this width>
 A. <mechanism> — <status> — <confidence> — <cited log line that decided it>
 B. ...
 
