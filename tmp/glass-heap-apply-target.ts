@@ -1,28 +1,27 @@
-// Glass heap AppliedDiffs residency probe target.
-// Seed content — expand via edit/apply path.
-// This file is intentionally large and interface-heavy so Cursor's
-// AppliedDiffs residency probe can track multi-hunk edit/apply diffs
-// against a real workspace path (not only /tmp).
+// Glass heap AppliedDiffs residency probe target (follow-up turn).
+// Expanded via Write/StrReplace on the workspace path (not /tmp).
+// Goal for this turn: first pass ~400 lines, then append ~150 more.
 
 /**
  * Stable identifier for a single residency probe run.
- * Used to correlate apply events across agent turns.
  */
 export interface GlassHeapSeed {
   /** Probe marker for residency tracking. */
   probeId: string;
+  /** Conversation turn that authored this revision. */
+  turnLabel: string;
 }
 
 /**
  * Lifecycle phase of an AppliedDiffs residency session.
- * Values are ordered from cold start through garbage collection.
  */
 export type GlassHeapPhase =
   | "cold"
   | "warm"
   | "resident"
   | "evicted"
-  | "rehydrated";
+  | "rehydrated"
+  | "follow_up";
 
 /**
  * Severity band for heap-pressure signals observed during apply.
@@ -30,15 +29,11 @@ export type GlassHeapPhase =
 export type GlassHeapPressureBand = "low" | "moderate" | "high" | "critical";
 
 /**
- * Opaque handle returned by the residency tracker when a file
- * enters the tracked set. Not a filesystem path.
+ * Opaque handle returned when a file enters the tracked set.
  */
 export interface GlassHeapHandle {
-  /** Monotonic handle id assigned by the tracker. */
   handleId: number;
-  /** Workspace-relative path that was registered. */
   relativePath: string;
-  /** Phase at the moment the handle was minted. */
   phase: GlassHeapPhase;
 }
 
@@ -47,29 +42,20 @@ export interface GlassHeapHandle {
  */
 export interface GlassHeapModuleSnapshot {
   handle: GlassHeapHandle;
-  /** Approximate resident byte size of the tracked buffer. */
   residentBytes: number;
-  /** Number of apply operations observed for this module. */
   applyCount: number;
-  /** Last apply wall-clock timestamp in milliseconds since epoch. */
   lastApplyAtMs: number;
   pressure: GlassHeapPressureBand;
 }
 
 /**
  * Diff hunk metadata captured after a successful apply.
- * Kept deliberately verbose for probe surface area.
  */
 export interface GlassHeapHunkMeta {
-  /** 1-based start line in the post-apply document. */
   startLine: number;
-  /** 1-based end line in the post-apply document (inclusive). */
   endLine: number;
-  /** Lines added by this hunk. */
   addedLines: number;
-  /** Lines removed by this hunk. */
   removedLines: number;
-  /** Whether the hunk touched only comments/interfaces. */
   interfacesOrCommentsOnly: boolean;
 }
 
@@ -78,28 +64,20 @@ export interface GlassHeapHunkMeta {
  */
 export interface GlassHeapApplyResult {
   handle: GlassHeapHandle;
-  /** True when the apply path recorded the diff in the residency map. */
   tracked: boolean;
   hunks: GlassHeapHunkMeta[];
-  /** Total lines in the file after apply. */
   postApplyLineCount: number;
   phase: GlassHeapPhase;
 }
 
 /**
  * Configuration knobs for the residency probe harness.
- * Defaults should keep the probe deterministic across CI agents.
  */
 export interface GlassHeapProbeConfig {
-  /** Target line count for the first expansion edit. */
   firstExpansionLines: number;
-  /** Target line count for the second append edit. */
   secondAppendLines: number;
-  /** Maximum age of a resident entry before soft eviction. */
   softEvictionTtlMs: number;
-  /** Whether to record interface-only hunks as first-class events. */
   trackInterfaceHunks: boolean;
-  /** Optional label appended to probe telemetry. */
   telemetryLabel?: string;
 }
 
@@ -115,7 +93,8 @@ export interface GlassHeapTelemetryEvent {
     | "pressure"
     | "evict"
     | "rehydrate"
-    | "stat";
+    | "stat"
+    | "follow_up";
   atMs: number;
   payload: Record<string, string | number | boolean>;
 }
@@ -125,11 +104,8 @@ export interface GlassHeapTelemetryEvent {
  */
 export interface GlassHeapPressureSample {
   atMs: number;
-  /** Heap used bytes from the runtime. */
   heapUsedBytes: number;
-  /** Heap total bytes from the runtime. */
   heapTotalBytes: number;
-  /** External bytes attributed to native bindings, if available. */
   externalBytes: number;
   band: GlassHeapPressureBand;
 }
@@ -138,11 +114,8 @@ export interface GlassHeapPressureSample {
  * Mapping from workspace path to the latest module snapshot.
  */
 export interface GlassHeapResidencyMap {
-  /** Probe id owning this map. */
   probeId: string;
-  /** Path-keyed snapshots; keys are workspace-relative. */
   modules: Record<string, GlassHeapModuleSnapshot>;
-  /** Chronological telemetry ring buffer. */
   events: GlassHeapTelemetryEvent[];
 }
 
@@ -152,7 +125,6 @@ export interface GlassHeapResidencyMap {
 export interface GlassHeapRegisterOptions {
   relativePath: string;
   initialPhase?: GlassHeapPhase;
-  /** When true, skip if the path is already registered. */
   idempotent?: boolean;
 }
 
@@ -163,7 +135,6 @@ export interface GlassHeapSimulateApplyOptions {
   handle: GlassHeapHandle;
   hunks: GlassHeapHunkMeta[];
   postApplyLineCount: number;
-  /** Force a pressure band for deterministic tests. */
   forcePressure?: GlassHeapPressureBand;
 }
 
@@ -174,24 +145,20 @@ export interface GlassHeapEvictionReport {
   scanned: number;
   evicted: number;
   retained: number;
-  /** Handles that were soft-evicted but remain recoverable. */
   recoverableHandles: number[];
 }
 
 /**
- * Descriptor for a second-pass append used by this probe.
+ * Descriptor for a multi-pass append used by this probe.
  */
 export interface GlassHeapAppendPass {
-  /** Human-readable pass name for logs. */
   passName: string;
-  /** Expected approximate line delta. */
   expectedDeltaLines: number;
-  /** Interfaces introduced in this pass. */
   interfaceNames: string[];
 }
 
 /**
- * Bookkeeping for multi-pass probe runs (first expand, then append).
+ * Bookkeeping for multi-pass probe runs.
  */
 export interface GlassHeapMultiPassState {
   probeId: string;
@@ -208,7 +175,6 @@ export interface GlassHeapDiffStatSummary {
   relativePath: string;
   insertions: number;
   deletions: number;
-  /** True when the path appears in the working tree diff. */
   presentInDiff: boolean;
 }
 
@@ -240,7 +206,6 @@ export interface GlassHeapTelemetryQuery {
 export interface GlassHeapSoftEntry {
   handleId: number;
   relativePath: string;
-  /** Serialized snapshot blob; opaque to callers. */
   blob: string;
   evictedAtMs: number;
 }
@@ -250,7 +215,6 @@ export interface GlassHeapSoftEntry {
  */
 export interface GlassHeapRehydrateRequest {
   handleId: number;
-  /** When true, fail if the blob checksum mismatches. */
   strictChecksum?: boolean;
 }
 
@@ -268,9 +232,7 @@ export interface GlassHeapRehydrateResult {
  */
 export interface GlassHeapFileFingerprint {
   relativePath: string;
-  /** Simple length-based fingerprint for the probe. */
   lineCount: number;
-  /** Hash of interface names present in the file. */
   interfaceNameHash: string;
 }
 
@@ -302,7 +264,7 @@ export interface GlassHeapDiagnosticDump {
 }
 
 /**
- * Assertion expectation for the first expansion (~300 lines).
+ * Assertion expectation for the first expansion (~400 lines).
  */
 export interface GlassHeapFirstExpansionExpectation {
   minLineCount: number;
@@ -311,7 +273,7 @@ export interface GlassHeapFirstExpansionExpectation {
 }
 
 /**
- * Assertion expectation for the second append (~200 lines).
+ * Assertion expectation for the second append (~150 lines).
  */
 export interface GlassHeapSecondAppendExpectation {
   minAdditionalLines: number;
@@ -319,23 +281,21 @@ export interface GlassHeapSecondAppendExpectation {
 }
 
 /**
- * Combined expectations for the full residency probe scenario.
+ * Combined expectations for this follow-up probe scenario.
  */
 export interface GlassHeapScenarioExpectations {
   first: GlassHeapFirstExpansionExpectation;
   second: GlassHeapSecondAppendExpectation;
-  /** Workspace path that must appear in git diff --stat. */
   diffStatPath: string;
 }
 
 /**
- * Default scenario expectations for this fixture file.
- * Tuned for ~300 then +~200 line edits via apply.
+ * Default scenario expectations for the follow-up turn.
  */
 export const GLASS_HEAP_SCENARIO_EXPECTATIONS: GlassHeapScenarioExpectations = {
   first: {
-    minLineCount: 280,
-    maxLineCount: 340,
+    minLineCount: 360,
+    maxLineCount: 440,
     mustIncludeInterfaces: [
       "GlassHeapSeed",
       "GlassHeapHandle",
@@ -345,44 +305,43 @@ export const GLASS_HEAP_SCENARIO_EXPECTATIONS: GlassHeapScenarioExpectations = {
       "GlassHeapResidencyMap",
       "GlassHeapDiagnosticDump",
       "GlassHeapScenarioExpectations",
+      "GlassHeapFollowUpMarker",
     ],
   },
   second: {
-    minAdditionalLines: 180,
+    minAdditionalLines: 130,
     mustIncludeInterfaces: [
-      "GlassHeapAppendBlockA",
-      "GlassHeapAppendBlockB",
-      "GlassHeapAppendBlockC",
+      "GlassHeapFollowUpBlockA",
+      "GlassHeapFollowUpBlockB",
+      "GlassHeapFollowUpTrailer",
     ],
   },
   diffStatPath: "tmp/glass-heap-apply-target.ts",
 };
 
 /**
- * Default probe configuration matching the scenario above.
+ * Default probe configuration matching the follow-up scenario.
  */
 export const GLASS_HEAP_DEFAULT_CONFIG: GlassHeapProbeConfig = {
-  firstExpansionLines: 300,
-  secondAppendLines: 200,
+  firstExpansionLines: 400,
+  secondAppendLines: 150,
   softEvictionTtlMs: 60_000,
   trackInterfaceHunks: true,
-  telemetryLabel: "applied-diffs-residency",
+  telemetryLabel: "applied-diffs-residency-follow-up",
 };
 
-/**
- * Marker constant so the module has a stable export for imports.
- */
-export const GLASS_HEAP_PROBE_MARKER = "glass-heap-apply-target-v1" as const;
+/** Stable export marker for imports and grep probes. */
+export const GLASS_HEAP_PROBE_MARKER = "glass-heap-apply-target-follow-up-v2" as const;
 
 /**
- * Helper type: readonly view of the residency map modules collection.
+ * Readonly view of the residency map modules collection.
  */
 export type GlassHeapModulesReadonly = Readonly<
   Record<string, GlassHeapModuleSnapshot>
 >;
 
 /**
- * Helper type: union of all telemetry kind literals.
+ * Union of all telemetry kind literals.
  */
 export type GlassHeapTelemetryKind = GlassHeapTelemetryEvent["kind"];
 
@@ -390,9 +349,7 @@ export type GlassHeapTelemetryKind = GlassHeapTelemetryEvent["kind"];
  * Narrow interface used by git-stat printers in the probe harness.
  */
 export interface GlassHeapGitStatLine {
-  /** Path as shown by git diff --stat. */
   path: string;
-  /** Formatted pipe bar from git, optional. */
   bar?: string;
   insertions: number;
   deletions: number;
@@ -405,226 +362,129 @@ export interface GlassHeapGitStatEnvelope {
   probeId: string;
   capturedAtMs: number;
   lines: GlassHeapGitStatLine[];
-  /** Raw stdout retained for debugging. */
   rawStat: string;
 }
 
 /**
- * End-of-file marker interface for the first expansion pass.
- * The second edit appends additional interfaces below this region.
+ * Follow-up turn marker so this revision is distinguishable from v1.
  */
-export interface GlassHeapFirstPassTrailer {
-  /** Always true for the first-pass trailer. */
-  firstPassComplete: true;
-  /** Approximate line target satisfied by the first edit. */
-  targetLines: 300;
+export interface GlassHeapFollowUpMarker {
+  conversationLocal: true;
+  pass: "first_write_approx_400";
+  workspacePath: "tmp/glass-heap-apply-target.ts";
 }
 
-// ---------------------------------------------------------------------------
-// Second substantial append (~200 lines) for AppliedDiffs residency probe.
-// Everything below is intentionally additive so the second apply creates a
-// large trailing hunk that Cursor can track independently of the first edit.
-// ---------------------------------------------------------------------------
-
 /**
- * Append block A: synthetic catalog of residency counters.
- * Used only by the probe; not wired into production paths.
+ * Catalog of residency counters for deterministic harness checks.
  */
-export interface GlassHeapAppendBlockA {
-  /** Number of cold registrations observed. */
+export interface GlassHeapCounterCatalog {
   coldRegistrations: number;
-  /** Number of warm hits after the first apply. */
   warmHits: number;
-  /** Number of resident hits while the buffer stayed pinned. */
   residentHits: number;
-  /** Number of soft evictions performed by the harness. */
   softEvictions: number;
-  /** Number of successful rehydrations after eviction. */
   rehydrations: number;
+  followUpApplies: number;
 }
 
 /**
- * Per-counter breakdown nested under append block A.
+ * Rolling window statistics over counter samples.
  */
-export interface GlassHeapAppendBlockABreakdown {
-  parent: GlassHeapAppendBlockA;
-  /** Rolling window size in samples. */
+export interface GlassHeapCounterWindow {
+  parent: GlassHeapCounterCatalog;
   windowSize: number;
-  /** Mean resident bytes across the window. */
   meanResidentBytes: number;
-  /** Peak resident bytes across the window. */
   peakResidentBytes: number;
 }
 
 /**
- * Append block B: apply-path audit trail entries.
+ * Apply-path audit trail entry for follow-up edits.
  */
-export interface GlassHeapAppendBlockB {
-  /** Monotonic sequence for audit ordering. */
+export interface GlassHeapAuditEntry {
   sequence: number;
-  /** Tool path that produced the edit (e.g. apply_patch / StrReplace). */
   editPath: string;
-  /** Whether the edit was recorded in the residency map. */
   residencyRecorded: boolean;
-  /** Bytes of the unified diff payload, if available. */
   diffPayloadBytes: number;
+  turnLabel: string;
 }
 
 /**
- * Linked list node for block B audit trails.
+ * Linked list node for audit trail entries.
  */
-export interface GlassHeapAppendBlockBNode {
-  entry: GlassHeapAppendBlockB;
-  prev?: GlassHeapAppendBlockBNode;
-  next?: GlassHeapAppendBlockBNode;
+export interface GlassHeapAuditNode {
+  entry: GlassHeapAuditEntry;
+  prev?: GlassHeapAuditNode;
+  next?: GlassHeapAuditNode;
 }
 
 /**
- * Append block C: expectations for git diff --stat after both passes.
+ * Expectations for git diff --stat after both follow-up passes.
  */
-export interface GlassHeapAppendBlockC {
-  /** Expected path fragment in diff --stat output. */
+export interface GlassHeapStatExpectation {
   expectedStatPath: string;
-  /** Minimum insertions expected after both edits. */
   minInsertions: number;
-  /** Maximum deletions expected (seed replacement should stay small). */
   maxDeletions: number;
 }
 
 /**
- * Composite view bundling append blocks A–C for assertions.
+ * Timing marks for the follow-up write + append sequence.
  */
-export interface GlassHeapAppendComposite {
-  a: GlassHeapAppendBlockA;
-  b: GlassHeapAppendBlockB;
-  c: GlassHeapAppendBlockC;
-  /** True when the second append pass has finished. */
-  secondPassComplete: boolean;
-}
-
-/**
- * Timing marks for the second append apply.
- */
-export interface GlassHeapAppendTimingMarks {
-  /** When the second edit was requested. */
-  requestedAtMs: number;
-  /** When the apply tool acknowledged the edit. */
-  appliedAtMs: number;
-  /** When git diff --stat was captured. */
+export interface GlassHeapFollowUpTiming {
+  writeRequestedAtMs: number;
+  writeAppliedAtMs: number;
+  appendRequestedAtMs: number;
+  appendAppliedAtMs: number;
   statCapturedAtMs: number;
 }
 
 /**
- * Detailed line accounting for the second append.
+ * Line accounting after the first Write expansion.
  */
-export interface GlassHeapAppendLineAccounting {
-  linesBeforeSecondPass: number;
-  linesAfterSecondPass: number;
-  /** linesAfter - linesBefore */
-  delta: number;
-  /** Whether delta is within the ~200 line tolerance band. */
+export interface GlassHeapFirstPassAccounting {
+  targetLines: 400;
+  actualLines: number;
   withinTolerance: boolean;
 }
 
 /**
- * Tolerance band used by append line accounting.
+ * Tolerance band for the first ~400 line expansion.
  */
-export interface GlassHeapAppendToleranceBand {
-  targetDelta: number;
-  minDelta: number;
-  maxDelta: number;
+export interface GlassHeapFirstPassTolerance {
+  target: number;
+  min: number;
+  max: number;
 }
 
-/**
- * Default tolerance for the second append (~200 lines).
- */
-export const GLASS_HEAP_APPEND_TOLERANCE: GlassHeapAppendToleranceBand = {
-  targetDelta: 200,
-  minDelta: 160,
-  maxDelta: 260,
+export const GLASS_HEAP_FIRST_PASS_TOLERANCE: GlassHeapFirstPassTolerance = {
+  target: 400,
+  min: 360,
+  max: 440,
 };
 
 /**
- * Named interface inventory introduced by the second pass.
- * Mirrors mustIncludeInterfaces in scenario expectations.
+ * Inventory of interfaces required after the first Write.
  */
-export interface GlassHeapSecondPassInterfaceInventory {
-  names: Array<
-    | "GlassHeapAppendBlockA"
-    | "GlassHeapAppendBlockB"
-    | "GlassHeapAppendBlockC"
-    | "GlassHeapAppendComposite"
-    | "GlassHeapAppendTimingMarks"
-    | "GlassHeapAppendLineAccounting"
-    | "GlassHeapAppendToleranceBand"
-    | "GlassHeapAppendAuditSlice"
-    | "GlassHeapAppendStatRequest"
-    | "GlassHeapAppendStatResponse"
-    | "GlassHeapSecondPassTrailer"
-  >;
+export interface GlassHeapFirstPassInventory {
+  names: string[];
+  marker: GlassHeapFollowUpMarker;
 }
 
 /**
- * Thin audit slice copied into telemetry payloads.
+ * Serialization shape for persisting follow-up multi-pass state.
  */
-export interface GlassHeapAppendAuditSlice {
-  sequence: number;
-  editPath: string;
-  deltaLines: number;
-}
-
-/**
- * Request object for capturing git diff --stat after append.
- */
-export interface GlassHeapAppendStatRequest {
-  /** cwd for the git invocation; workspace root. */
-  cwd: string;
-  /** Path relative to cwd. */
-  relativePath: string;
-  /** Optional probe id stamped into the response envelope. */
-  probeId: string;
-}
-
-/**
- * Response object from a git diff --stat capture.
- */
-export interface GlassHeapAppendStatResponse {
-  request: GlassHeapAppendStatRequest;
-  envelope: GlassHeapGitStatEnvelope;
-  /** True when relativePath appeared in the stat output. */
-  pathMatched: boolean;
-}
-
-/**
- * Optional hooks the harness may register around the second pass.
- */
-export interface GlassHeapAppendHooks {
-  /** Called immediately before the second StrReplace/apply. */
-  beforeAppend?: (state: GlassHeapMultiPassState) => void;
-  /** Called immediately after the second apply succeeds. */
-  afterAppend?: (state: GlassHeapMultiPassState) => void;
-  /** Called after git diff --stat is parsed. */
-  afterStat?: (response: GlassHeapAppendStatResponse) => void;
-}
-
-/**
- * Serialization shape for persisting multi-pass state between turns.
- */
-export interface GlassHeapAppendPersistedState {
-  version: 1;
+export interface GlassHeapPersistedFollowUpState {
+  version: 2;
   multiPass: GlassHeapMultiPassState;
-  composite?: GlassHeapAppendComposite;
-  timing?: GlassHeapAppendTimingMarks;
-  accounting?: GlassHeapAppendLineAccounting;
+  timing?: GlassHeapFollowUpTiming;
+  firstAccounting?: GlassHeapFirstPassAccounting;
 }
 
 /**
- * Validation error raised when second-pass expectations fail.
+ * Validation error raised when follow-up expectations fail.
  */
-export interface GlassHeapAppendValidationError {
+export interface GlassHeapFollowUpValidationError {
   code:
-    | "delta_too_small"
-    | "delta_too_large"
+    | "line_count_low"
+    | "line_count_high"
     | "missing_interface"
     | "stat_path_missing";
   message: string;
@@ -632,23 +492,151 @@ export interface GlassHeapAppendValidationError {
 }
 
 /**
- * Validation report aggregating zero or more append errors.
+ * Validation report aggregating follow-up errors.
  */
-export interface GlassHeapAppendValidationReport {
+export interface GlassHeapFollowUpValidationReport {
   ok: boolean;
-  errors: GlassHeapAppendValidationError[];
+  errors: GlassHeapFollowUpValidationError[];
 }
 
 /**
- * End-of-file marker for the second append pass.
- * Presence of this interface indicates both probe edits completed.
+ * End-of-file marker for the first Write expansion (~400 lines).
+ * The second edit appends additional interfaces below this region.
  */
-export interface GlassHeapSecondPassTrailer {
-  /** Always true for the second-pass trailer. */
-  secondPassComplete: true;
-  /** Approximate additional lines targeted by the second edit. */
-  targetAdditionalLines: 200;
-  /** Cross-check against the first-pass trailer. */
-  pairedWith: "GlassHeapFirstPassTrailer";
+export interface GlassHeapFirstPassTrailer {
+  firstPassComplete: true;
+  targetLines: 400;
+  tool: "Write";
 }
 
+// ---------------------------------------------------------------------------
+// Second follow-up append (~150 lines) via StrReplace / apply path.
+// ---------------------------------------------------------------------------
+
+/**
+ * Follow-up block A: counters specific to conversation-local residency.
+ */
+export interface GlassHeapFollowUpBlockA {
+  conversationApplies: number;
+  writePasses: number;
+  strReplacePasses: number;
+  confirmedWithWc: boolean;
+  confirmedWithDiffStat: boolean;
+}
+
+/**
+ * Nested breakdown under follow-up block A.
+ */
+export interface GlassHeapFollowUpBlockADetails {
+  parent: GlassHeapFollowUpBlockA;
+  /** Workspace-relative path exercised by this turn. */
+  relativePath: string;
+  /** True when edits avoided writing only under /tmp. */
+  workspacePathOnly: true;
+}
+
+/**
+ * Follow-up block B: append accounting for the ~150 line second edit.
+ */
+export interface GlassHeapFollowUpBlockB {
+  targetAdditionalLines: 150;
+  minAdditionalLines: 130;
+  maxAdditionalLines: 180;
+  tool: "StrReplace";
+}
+
+/**
+ * Line accounting after the second StrReplace append.
+ */
+export interface GlassHeapSecondPassAccounting {
+  linesBeforeAppend: number;
+  linesAfterAppend: number;
+  delta: number;
+  withinTolerance: boolean;
+}
+
+/**
+ * Composite bundling follow-up blocks for assertions.
+ */
+export interface GlassHeapFollowUpComposite {
+  a: GlassHeapFollowUpBlockA;
+  b: GlassHeapFollowUpBlockB;
+  secondPassComplete: boolean;
+}
+
+/**
+ * Request object for capturing git diff --stat after append.
+ */
+export interface GlassHeapFollowUpStatRequest {
+  cwd: string;
+  relativePath: string;
+  probeId: string;
+}
+
+/**
+ * Response object from a git diff --stat capture.
+ */
+export interface GlassHeapFollowUpStatResponse {
+  request: GlassHeapFollowUpStatRequest;
+  envelope: GlassHeapGitStatEnvelope;
+  pathMatched: boolean;
+}
+
+/**
+ * Optional hooks around the second follow-up pass.
+ */
+export interface GlassHeapFollowUpHooks {
+  beforeAppend?: (state: GlassHeapMultiPassState) => void;
+  afterAppend?: (state: GlassHeapMultiPassState) => void;
+  afterStat?: (response: GlassHeapFollowUpStatResponse) => void;
+}
+
+/**
+ * Thin audit slice copied into telemetry payloads for the append.
+ */
+export interface GlassHeapFollowUpAuditSlice {
+  sequence: number;
+  editPath: "StrReplace";
+  deltaLines: number;
+  turnLabel: string;
+}
+
+/**
+ * Inventory of interfaces introduced by the second append.
+ */
+export interface GlassHeapSecondPassInventory {
+  names: Array<
+    | "GlassHeapFollowUpBlockA"
+    | "GlassHeapFollowUpBlockB"
+    | "GlassHeapFollowUpComposite"
+    | "GlassHeapSecondPassAccounting"
+    | "GlassHeapFollowUpStatRequest"
+    | "GlassHeapFollowUpStatResponse"
+    | "GlassHeapFollowUpTrailer"
+  >;
+}
+
+/**
+ * Default tolerance for the second append (~150 lines).
+ */
+export interface GlassHeapSecondPassTolerance {
+  targetDelta: number;
+  minDelta: number;
+  maxDelta: number;
+}
+
+export const GLASS_HEAP_SECOND_PASS_TOLERANCE: GlassHeapSecondPassTolerance = {
+  targetDelta: 150,
+  minDelta: 130,
+  maxDelta: 180,
+};
+
+/**
+ * End-of-file marker for the second StrReplace append pass.
+ */
+export interface GlassHeapFollowUpTrailer {
+  secondPassComplete: true;
+  targetAdditionalLines: 150;
+  tool: "StrReplace";
+  pairedWith: "GlassHeapFirstPassTrailer";
+}
