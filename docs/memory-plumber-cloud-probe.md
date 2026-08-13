@@ -36,4 +36,13 @@ There is no `route.ts`, `proxy.ts`, `loading.tsx`, `error.tsx`, or env config. `
 
 ## What is not the app
 
-`glass-scroll-repro/` holds ~2196 lines of long exported strings. Nothing in `src/` imports it. The same is true of the root repro notes. Treat those as agent-harness artifacts when changing product code.
+`glass-scroll-repro/` holds 2196 lines of long exported strings. Nothing in `src/` imports it. The same is true of the root repro notes. Treat those as agent-harness artifacts when changing product code.
+
+## Probe findings
+
+1. Top-level: Next.js 16 App Router starter plus one-line repro files. Directories are `src/`, `public/`, `glass-scroll-repro/`, `docs/`.
+2. Manifests: `package.json` is the only language manifest. No `Cargo.toml` or `go.mod`. README names the app Silly Starter™.
+3. Largest dirs by file count (excluding `node_modules`): `glass-scroll-repro/` 8, `public/` 5, `src/app/` 4, `src/components/` 2.
+4. `TODO` / `FIXME` in `src/`: 0.
+5. This file.
+6. 36 project files, 233 lines of `src` ts/tsx/css, 2196 lines in `glass-scroll-repro/`.
