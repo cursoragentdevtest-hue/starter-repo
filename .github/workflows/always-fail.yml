@@ -1,0 +1,10 @@
+name: always-fail
+
+on:
+  pull_request:
+
+jobs:
+  always-fail:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo failing on purpose && exit 1
