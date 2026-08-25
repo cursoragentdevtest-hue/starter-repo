@@ -1,3 +1,4 @@
+<!-- One-line comment for review file-link coverage. -->
 # Silly Starter™
 
 A whimsical Next.js starter app that absolutely does not take itself seriously.
