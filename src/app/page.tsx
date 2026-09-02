@@ -1,5 +1,6 @@
 import { DuckButton } from "@/components/DuckButton";
 import { SillyFacts } from "@/components/SillyFacts";
+import { LEG_B_ITEMS } from "@/items/legBItem";
 
 export default function Home() {
   return (
@@ -27,6 +28,18 @@ export default function Home() {
         <DuckButton />
 
         <SillyFacts />
+
+        <ul className="grid w-full gap-3 sm:grid-cols-2">
+          {LEG_B_ITEMS.map((item) => (
+            <li
+              key={item.id}
+              className="rounded-xl border border-amber-300/70 bg-white/70 px-4 py-3 text-left dark:border-amber-700/70 dark:bg-amber-950/50"
+            >
+              <div className="font-semibold text-amber-950 dark:text-amber-50">{item.label}</div>
+              <div className="text-sm text-amber-800/70 dark:text-amber-200/70">{item.detail}</div>
+            </li>
+          ))}
+        </ul>
 
         <div className="grid w-full gap-4 sm:grid-cols-3">
           {[
