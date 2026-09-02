@@ -1,4 +1,5 @@
 import { DuckButton } from "@/components/DuckButton";
+import { LegA } from "@/components/LegA";
 import { SillyFacts } from "@/components/SillyFacts";
 
 export default function Home() {
@@ -27,6 +28,8 @@ export default function Home() {
         <DuckButton />
 
         <SillyFacts />
+
+        <LegA />
 
         <div className="grid w-full gap-4 sm:grid-cols-3">
           {[
