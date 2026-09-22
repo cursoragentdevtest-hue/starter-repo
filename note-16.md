@@ -1,0 +1,1 @@
+Sixteen is two to the fourth power, a square, and a common age of new independence. In computing it is the size of a nibble doubled into a full byte's high half, and hexadecimal counting leans on groups of sixteen.

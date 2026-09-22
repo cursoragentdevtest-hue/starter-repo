@@ -1,0 +1,1 @@
+Twenty is a score in older English, a round number built from two tens, and a convenient batch. Hands and feet together give twenty digits, which is why some counting systems historically used a base of twenty.

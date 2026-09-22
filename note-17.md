@@ -1,0 +1,1 @@
+Seventeen is a prime that feels slightly awkward and distinctive. It is the number of syllables in a traditional haiku, and it refuses to be factored into smaller whole numbers other than one and itself.

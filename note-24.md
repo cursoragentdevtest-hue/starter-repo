@@ -1,0 +1,1 @@
+Twenty-four is highly composite: hours in a day, and a number that divides by two, three, four, six, eight, and twelve. It is a natural packing size for time, crates, and any schedule that wants even splits.

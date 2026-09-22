@@ -1,0 +1,1 @@
+Three is the first odd prime and a classic grouping: beginning, middle, and end; past, present, and future. Triangles rest on three points, and many stories find their shape in a three-part structure.
