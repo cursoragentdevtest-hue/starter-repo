@@ -1,0 +1,1 @@
+Nine is three squared, the last single digit, and a threshold before place value rolls over. A cat is said to have nine lives, and a baseball team takes the field with nine players in a classic lineup.

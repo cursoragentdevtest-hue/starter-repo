@@ -1,0 +1,1 @@
+Forty is a round composite, four tens, and a number with a long cultural career as a trial period or a generation of wandering. It is even, divisible by many small integers, and a comfortable batch size.

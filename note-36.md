@@ -1,0 +1,1 @@
+Thirty-six is six squared, a highly composite number, and the square on a standard roulette layout. It divides in many even ways, which makes it a favorite for grids, dozens of dozens, and boxed sets.

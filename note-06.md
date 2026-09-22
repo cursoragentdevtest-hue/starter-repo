@@ -1,0 +1,1 @@
+Six is the smallest perfect number, equal to the sum of its proper divisors. It is also highly composite for its size: two times three, the faces of a cube, and a handy count for grouping work into even parts.
