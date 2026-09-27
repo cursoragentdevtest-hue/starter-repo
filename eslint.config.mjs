@@ -16,3 +16,5 @@ const eslintConfig = defineConfig([
 ]);
 
 export default eslintConfig;
+
+// verification marker: cursor-658a
