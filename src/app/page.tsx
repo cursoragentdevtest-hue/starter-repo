@@ -1,5 +1,9 @@
+import { BlueSquare } from "@/components/BlueSquare";
 import { DuckButton } from "@/components/DuckButton";
+import { GreenSquare } from "@/components/GreenSquare";
+import { RedSquare } from "@/components/RedSquare";
 import { SillyFacts } from "@/components/SillyFacts";
+import { YellowSquare } from "@/components/YellowSquare";
 
 export default function Home() {
   return (
@@ -22,6 +26,13 @@ export default function Home() {
           <p className="text-xl text-amber-800/70 dark:text-amber-200/70">
             A Next.js app that absolutely does not take itself seriously.
           </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <RedSquare />
+          <GreenSquare />
+          <BlueSquare />
+          <YellowSquare />
         </div>
 
         <DuckButton />
