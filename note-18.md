@@ -1,0 +1,1 @@
+Eighteen is two times three squared, a legal adulthood in many places, and a multiple that divides well. It sits at the end of childhood counting and at the start of adult responsibility in civic life.

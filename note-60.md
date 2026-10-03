@@ -1,0 +1,1 @@
+Sixty is a highly composite round number: seconds in a minute, minutes in an hour, and the base of old Babylonian counting. It divides by two, three, four, five, and six, which is why it remains a natural close for this set of notes.

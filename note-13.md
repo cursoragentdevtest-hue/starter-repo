@@ -1,0 +1,1 @@
+Thirteen is a prime with a mixed reputation: unlucky in some buildings, celebrated as a baker's dozen in others. It sits just beyond a complete twelve, which may be why it feels like an extra or a jinxed surplus.

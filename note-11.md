@@ -1,0 +1,1 @@
+Eleven is a palindromic prime, the first double-digit number that reads the same forward and back. It often stands just past a round ten, a little extra, a team plus one substitute, or a repeating pair of ones.

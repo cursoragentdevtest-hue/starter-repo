@@ -1,0 +1,1 @@
+Twenty-one is three times seven, a triangular number, and a coming-of-age mark in some legal traditions. In cards it is the target of blackjack, a sum that feels complete without quite reaching a round twenty-five.

@@ -1,0 +1,1 @@
+Forty-eight is a highly composite number, sixteen times three, and a favorite packing size. It divides by two, three, four, six, eight, twelve, sixteen, and twenty-four, which makes it a natural crate or carton count.

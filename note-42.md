@@ -1,0 +1,1 @@
+Forty-two is twice twenty-one, three times fourteen, and six times seven. It is famous as a joke answer to life, the universe, and everything, which only made an otherwise ordinary composite more memorable.

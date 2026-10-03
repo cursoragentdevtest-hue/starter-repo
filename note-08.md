@@ -1,0 +1,1 @@
+Eight is two cubed and a power of two, which makes it a natural byte-sized grouping. An octopus has eight arms, a stop sign has eight sides, and the digit itself loops like an infinity sign stood on end.
