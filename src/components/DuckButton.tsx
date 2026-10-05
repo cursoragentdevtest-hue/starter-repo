@@ -1,18 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { QUACKS } from "@/content/quacks";
 import { pickDifferent } from "@/lib/pickDifferent";
-
-const QUACKS = [
-  "Quack!",
-  "Honk??",
-  "Bread acquired.",
-  "Professional waddler.",
-  "404: dignity not found.",
-  "This button does nothing. Like my degree.",
-  "You're doing great, probably.",
-  "Have you tried turning the duck off and on again?",
-];
 
 export function DuckButton() {
   const [quack, setQuack] = useState("Press for wisdom");
