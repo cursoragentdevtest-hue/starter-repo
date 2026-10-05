@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { pickDifferentIndex } from "@/lib/cycle";
 
-const QUACKS = [
+export const QUACKS = [
   "Quack!",
   "Honk??",
   "Bread acquired.",
@@ -14,13 +15,28 @@ const QUACKS = [
 ];
 
 export function DuckButton() {
-  const [quack, setQuack] = useState("Press for wisdom");
+  const [quackIndex, setQuackIndex] = useState<number | null>(null);
   const [wobble, setWobble] = useState(false);
+  const wobbleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (wobbleTimeoutRef.current !== null) {
+        clearTimeout(wobbleTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function handleClick() {
-    setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    setQuackIndex((current) => pickDifferentIndex(QUACKS.length, current ?? -1));
     setWobble(true);
-    setTimeout(() => setWobble(false), 500);
+    if (wobbleTimeoutRef.current !== null) {
+      clearTimeout(wobbleTimeoutRef.current);
+    }
+    wobbleTimeoutRef.current = setTimeout(() => {
+      setWobble(false);
+      wobbleTimeoutRef.current = null;
+    }, 500);
   }
 
   return (
@@ -33,8 +49,12 @@ export function DuckButton() {
       >
         🦆
       </button>
-      <p className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70">
-        {quack}
+      <p
+        role="status"
+        aria-live="polite"
+        className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70"
+      >
+        {quackIndex === null ? "Press for wisdom" : QUACKS[quackIndex]}
       </p>
     </div>
   );
