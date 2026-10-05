@@ -3,13 +3,11 @@
  * Empty or invalid lengths throw instead of producing NaN / empty UI.
  */
 
+import { assertFunction, assertInteger, assertPositiveInteger } from "./validate";
+
 export function nextCyclicIndex(index: number, length: number): number {
-  if (!Number.isInteger(length) || length <= 0) {
-    throw new Error(`length must be a positive integer, received ${length}`);
-  }
-  if (!Number.isInteger(index)) {
-    throw new Error(`index must be an integer, received ${index}`);
-  }
+  assertInteger("nextCyclicIndex", "index", index);
+  assertPositiveInteger("nextCyclicIndex", "length", length);
   return (((index + 1) % length) + length) % length;
 }
 
@@ -18,16 +16,26 @@ export function pickDifferentIndex(
   currentIndex: number,
   random: () => number = Math.random,
 ): number {
-  if (!Number.isInteger(length) || length <= 0) {
-    throw new Error(`length must be a positive integer, received ${length}`);
-  }
+  assertPositiveInteger("pickDifferentIndex", "length", length);
+  assertInteger("pickDifferentIndex", "currentIndex", currentIndex);
+  assertFunction("pickDifferentIndex", "random", random);
+
   if (length === 1) {
     return 0;
   }
 
-  const roll = random();
-  if (!Number.isFinite(roll) || roll < 0 || roll >= 1) {
-    throw new Error(`random() must return a number in [0, 1), received ${roll}`);
+  let roll: unknown;
+  try {
+    roll = random();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`pickDifferentIndex: "random" threw: ${message}`);
+  }
+
+  if (typeof roll !== "number" || !Number.isFinite(roll) || roll < 0 || roll >= 1) {
+    throw new Error(
+      `pickDifferentIndex: "random" must return a number in [0, 1), received ${String(roll)}`,
+    );
   }
 
   let next = Math.floor(roll * length);

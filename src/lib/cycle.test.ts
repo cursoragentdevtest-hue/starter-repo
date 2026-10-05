@@ -7,10 +7,25 @@ describe("nextCyclicIndex", () => {
     expect(nextCyclicIndex(7, 8)).toBe(0);
   });
 
-  it("rejects empty or invalid lengths", () => {
-    expect(() => nextCyclicIndex(0, 0)).toThrow(/positive integer/);
-    expect(() => nextCyclicIndex(0, -1)).toThrow(/positive integer/);
-    expect(() => nextCyclicIndex(0.5, 3)).toThrow(/index must be an integer/);
+  it("rejects empty, non-integer, and non-number inputs with a named error", () => {
+    expect(() => nextCyclicIndex(0, 0)).toThrow(
+      'nextCyclicIndex: "length" must be a positive integer, received 0',
+    );
+    expect(() => nextCyclicIndex(0, -1)).toThrow(
+      'nextCyclicIndex: "length" must be a positive integer, received -1',
+    );
+    expect(() => nextCyclicIndex(0.5, 3)).toThrow(
+      'nextCyclicIndex: "index" must be an integer, received 0.5',
+    );
+    expect(() => nextCyclicIndex(Number.NaN, 3)).toThrow(
+      'nextCyclicIndex: "index" must be an integer, received NaN',
+    );
+    expect(() => nextCyclicIndex(0, Number.POSITIVE_INFINITY)).toThrow(
+      'nextCyclicIndex: "length" must be a positive integer, received Infinity',
+    );
+    expect(() => nextCyclicIndex(0, "8" as unknown as number)).toThrow(
+      'nextCyclicIndex: "length" must be a positive integer, received "8"',
+    );
   });
 });
 
@@ -28,9 +43,26 @@ describe("pickDifferentIndex", () => {
     expect(pickDifferentIndex(1, 0, () => 0)).toBe(0);
   });
 
-  it("rejects an empty list and an out-of-range random() result", () => {
-    expect(() => pickDifferentIndex(0, 0)).toThrow(/positive integer/);
-    expect(() => pickDifferentIndex(8, 0, () => 1)).toThrow(/\[0, 1\)/);
-    expect(() => pickDifferentIndex(8, 0, () => Number.NaN)).toThrow(/\[0, 1\)/);
+  it("rejects invalid length, currentIndex, random callback, and roll", () => {
+    expect(() => pickDifferentIndex(0, 0)).toThrow(
+      'pickDifferentIndex: "length" must be a positive integer, received 0',
+    );
+    expect(() => pickDifferentIndex(8, 1.2)).toThrow(
+      'pickDifferentIndex: "currentIndex" must be an integer, received 1.2',
+    );
+    expect(() => pickDifferentIndex(8, 0, null as unknown as () => number)).toThrow(
+      'pickDifferentIndex: "random" must be a function, received null',
+    );
+    expect(() => pickDifferentIndex(8, 0, () => 1)).toThrow(
+      'pickDifferentIndex: "random" must return a number in [0, 1), received 1',
+    );
+    expect(() => pickDifferentIndex(8, 0, () => Number.NaN)).toThrow(
+      'pickDifferentIndex: "random" must return a number in [0, 1), received NaN',
+    );
+    expect(() =>
+      pickDifferentIndex(8, 0, () => {
+        throw new Error("boom");
+      }),
+    ).toThrow('pickDifferentIndex: "random" threw: boom');
   });
 });

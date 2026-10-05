@@ -1,5 +1,6 @@
 import { nextCyclicIndex, pickDifferentIndex } from "./cycle";
-import { FACTS, QUACKS } from "./quotes";
+import { FACTS, getQuote, QUACKS } from "./quotes";
+import { assertFunction, assertPlainObject, assertStringArray } from "./validate";
 
 export const EXIT_OK = 0;
 export const EXIT_USAGE = 1;
@@ -75,11 +76,15 @@ function takeValue(argv: string[], i: number, flag: string): { ok: true; value: 
 }
 
 export function parseArgs(argv: string[]): ParseResult {
+  assertStringArray("parseArgs", "argv", argv);
+
   let command: "quack" | "fact" | "help" | "version" | null = null;
   let from = -1;
   let index = 0;
   let next = false;
   let json = false;
+  let fromProvided = false;
+  let indexProvided = false;
 
   for (let i = 0; i < argv.length; ) {
     const arg = argv[i];
@@ -105,6 +110,7 @@ export function parseArgs(argv: string[]): ParseResult {
       const parsed = readInt(taken.value, "--from");
       if (!parsed.ok) return parsed;
       from = parsed.value;
+      fromProvided = true;
       i = taken.next;
       continue;
     }
@@ -114,6 +120,7 @@ export function parseArgs(argv: string[]): ParseResult {
       const parsed = readInt(taken.value, "--index");
       if (!parsed.ok) return parsed;
       index = parsed.value;
+      indexProvided = true;
       i = taken.next;
       continue;
     }
@@ -128,6 +135,9 @@ export function parseArgs(argv: string[]): ParseResult {
       i += 1;
       continue;
     }
+    if (arg === "") {
+      return { ok: false, exitCode: EXIT_USAGE, message: "Unknown command: empty string" };
+    }
     return { ok: false, exitCode: EXIT_USAGE, message: `Unknown command: ${arg}` };
   }
 
@@ -135,13 +145,41 @@ export function parseArgs(argv: string[]): ParseResult {
     return { ok: false, exitCode: EXIT_USAGE, message: "Missing command. Expected quack or fact." };
   }
   if (command === "quack") {
+    if (indexProvided) {
+      return { ok: false, exitCode: EXIT_USAGE, message: "--index is only valid with fact" };
+    }
+    if (next) {
+      return { ok: false, exitCode: EXIT_USAGE, message: "--next is only valid with fact" };
+    }
     return { ok: true, command: "quack", from, json };
+  }
+  if (fromProvided) {
+    return { ok: false, exitCode: EXIT_USAGE, message: "--from is only valid with quack" };
   }
   return { ok: true, command: "fact", index, next, json };
 }
 
+function assertCliIo(io: CliIo): void {
+  assertPlainObject("run", "io", io);
+  assertFunction("run", "io.log", io.log);
+  assertFunction("run", "io.error", io.error);
+  if (io.random !== undefined) {
+    assertFunction("run", "io.random", io.random);
+  }
+}
+
 export function run(argv: string[], io: CliIo = { log: console.log, error: console.error }): number {
-  const parsed = parseArgs(argv);
+  assertCliIo(io);
+  let parsed: ParseResult;
+  try {
+    parsed = parseArgs(argv);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    io.error(message);
+    io.error("Try --help for usage.");
+    return EXIT_INVALID;
+  }
+
   if (!parsed.ok) {
     io.error(parsed.message);
     io.error("Try --help for usage.");
@@ -159,8 +197,14 @@ export function run(argv: string[], io: CliIo = { log: console.log, error: conso
 
   try {
     if (parsed.command === "quack") {
+      if (parsed.from !== -1 && (parsed.from < 0 || parsed.from >= QUACKS.length)) {
+        io.error(
+          `--from must be -1 (any quack) or between 0 and ${QUACKS.length - 1}, received ${parsed.from}`,
+        );
+        return EXIT_INVALID;
+      }
       const chosen = pickDifferentIndex(QUACKS.length, parsed.from, io.random ?? Math.random);
-      const text = QUACKS[chosen];
+      const text = getQuote("QUACKS", QUACKS, chosen);
       io.log(parsed.json ? JSON.stringify({ index: chosen, text }) : text);
       return EXIT_OK;
     }
@@ -170,7 +214,7 @@ export function run(argv: string[], io: CliIo = { log: console.log, error: conso
       return EXIT_INVALID;
     }
     const chosen = parsed.next ? nextCyclicIndex(parsed.index, FACTS.length) : parsed.index;
-    const text = FACTS[chosen];
+    const text = getQuote("FACTS", FACTS, chosen);
     io.log(parsed.json ? JSON.stringify({ index: chosen, text }) : text);
     return EXIT_OK;
   } catch (error) {
