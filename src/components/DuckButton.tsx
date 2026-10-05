@@ -20,7 +20,6 @@ export function DuckButton() {
   function handleClick() {
     setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
     setWobble(true);
-    setTimeout(() => setWobble(false), 500);
   }
 
   return (
@@ -28,6 +27,7 @@ export function DuckButton() {
       <button
         type="button"
         onClick={handleClick}
+        onAnimationEnd={() => setWobble(false)}
         className={`duck-btn text-6xl transition-transform hover:scale-110 active:scale-95 ${wobble ? "wobble" : ""}`}
         aria-label="Quack button"
       >
