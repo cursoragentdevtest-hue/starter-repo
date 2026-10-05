@@ -1,19 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { INITIAL_CAPTION, pickQuack } from "@/lib/catalog";
 
-export const QUACKS = [
-  "Quack!",
-  "Honk??",
-  "Bread acquired.",
-  "Professional waddler.",
-  "404: dignity not found.",
-  "This button does nothing. Like my degree.",
-  "You're doing great, probably.",
-  "Have you tried turning the duck off and on again?",
-] as const;
-
-export const INITIAL_CAPTION = "Press for wisdom";
+export { INITIAL_CAPTION, QUACKS } from "@/lib/catalog";
 
 export function DuckButton() {
   const [caption, setCaption] = useState(INITIAL_CAPTION);
@@ -29,7 +19,7 @@ export function DuckButton() {
   }, []);
 
   function handleClick() {
-    setCaption(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    setCaption(pickQuack());
     setWobble(true);
 
     if (wobbleTimeoutRef.current !== null) {
