@@ -12,6 +12,18 @@ describe("DuckButton", () => {
     vi.restoreAllMocks();
   });
 
+  it("shows a new quack on every click, even when the random roll repeats", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    render(<DuckButton />);
+    const button = screen.getByRole("button", { name: "Quack button" });
+
+    fireEvent.click(button);
+    expect(screen.getByText("Quack!")).toBeDefined();
+
+    fireEvent.click(button);
+    expect(screen.queryByText("Quack!")).toBeNull();
+  });
+
   it("keeps wobbling until the animation ends, regardless of earlier clicks", () => {
     render(<DuckButton />);
     const button = screen.getByRole("button", { name: "Quack button" });

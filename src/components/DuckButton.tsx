@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { pickDifferent } from "@/lib/pickDifferent";
 
 const QUACKS = [
   "Quack!",
@@ -18,7 +19,7 @@ export function DuckButton() {
   const [wobble, setWobble] = useState(false);
 
   function handleClick() {
-    setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    setQuack(pickDifferent(QUACKS, quack));
     setWobble(true);
   }
 
