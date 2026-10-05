@@ -7,6 +7,7 @@ import {
   EXIT_ERROR,
   EXIT_SUCCESS,
   EXIT_USAGE,
+  UsageError,
   helpText,
   runCli,
 } from "./cli";
@@ -69,18 +70,81 @@ describe("runCli", () => {
     const result = capture(["dance"]);
     expect(result.code).toBe(EXIT_USAGE);
     expect(result.stderr[0]).toContain("Unknown command 'dance'");
+    expect(result.stderr[0]).toContain("Expected quack, fact, list, help, or version");
   });
 
   it("returns error for out-of-range index", () => {
     const result = capture(["quack", "--index", "99"]);
     expect(result.code).toBe(EXIT_ERROR);
-    expect(result.stderr[0]).toMatch(/Quack index must be an integer/);
+    expect(result.stderr[0]).toContain("Quack index out of range");
   });
 
   it("returns usage for invalid --index values", () => {
     const result = capture(["fact", "--index", "nope"]);
     expect(result.code).toBe(EXIT_USAGE);
     expect(result.stderr[0]).toContain("--index must be an integer");
+  });
+});
+
+describe("runCli error paths", () => {
+  it("throws TypeError when argv is not a string array", () => {
+    expect(() => runCli("quack" as unknown as string[])).toThrow(TypeError);
+    expect(() => runCli("quack" as unknown as string[])).toThrow(
+      /argv must be an array of strings/,
+    );
+  });
+
+  it("throws TypeError when argv contains a non-string entry", () => {
+    expect(() => runCli(["quack", 1 as unknown as string])).toThrow(
+      /argv\[1\] must be a string/,
+    );
+  });
+
+  it("throws TypeError when io is missing writers", () => {
+    expect(() =>
+      runCli(["quack"], { stdout: () => undefined } as unknown as {
+        stdout: (line: string) => void;
+        stderr: (line: string) => void;
+      }),
+    ).toThrow(/io\.stderr must be a function/);
+  });
+
+  it("returns usage for an empty --index value", () => {
+    const result = capture(["quack", "--index", ""]);
+    expect(result.code).toBe(EXIT_USAGE);
+    expect(result.stderr[0]).toBe("--index requires an integer value");
+  });
+
+  it("returns usage for unexpected list extras", () => {
+    const result = capture(["list", "facts", "extra"]);
+    expect(result.code).toBe(EXIT_USAGE);
+    expect(result.stderr[0]).toContain("Unexpected argument 'extra'");
+  });
+
+  it("returns usage when list is missing its catalog name", () => {
+    const result = capture(["list"]);
+    expect(result.code).toBe(EXIT_USAGE);
+    expect(result.stderr[0]).toContain(
+      "list requires exactly one catalog name: 'quacks' or 'facts'",
+    );
+  });
+
+  it("returns usage when list is given --index", () => {
+    const result = capture(["list", "quacks", "--index", "0"]);
+    expect(result.code).toBe(EXIT_USAGE);
+    expect(result.stderr[0]).toBe("list does not accept --index");
+  });
+
+  it("returns usage for unknown flags from parseArgs", () => {
+    const result = capture(["quack", "--loud"]);
+    expect(result.code).toBe(EXIT_USAGE);
+    expect(result.stderr.join("\n")).toMatch(/unknown|Unexpected/i);
+    expect(result.stderr.join("\n")).toContain(`Try '${CLI_NAME} --help'`);
+  });
+
+  it("rejects empty UsageError messages", () => {
+    expect(() => new UsageError("")).toThrow(TypeError);
+    expect(() => new UsageError("   ")).toThrow(/non-empty string/);
   });
 });
 
@@ -113,6 +177,8 @@ describe("cli process entry", () => {
     );
 
     expect(result.status).toBe(EXIT_USAGE);
-    expect(result.stderr).toContain("list requires 'quacks' or 'facts'");
+    expect(result.stderr).toContain(
+      "list requires exactly one catalog name: 'quacks' or 'facts'",
+    );
   });
 });

@@ -26,6 +26,13 @@ const defaultIo: CliIo = {
   stderr: (line) => console.error(line),
 };
 
+function describeValue(value: unknown): string {
+  if (typeof value === "string") return `string ${JSON.stringify(value)}`;
+  if (Array.isArray(value)) return `array(length=${value.length})`;
+  if (value === null) return "null";
+  return `${typeof value}`;
+}
+
 export function helpText(): string {
   return `Silly Starter™ CLI — quacks and facts without a browser
 
@@ -60,17 +67,59 @@ Examples:
 
 function parseIndex(raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined;
+  if (raw.trim() === "") {
+    throw new UsageError("--index requires an integer value");
+  }
   const value = Number(raw);
-  if (!Number.isInteger(value)) {
-    throw new UsageError(`--index must be an integer (got ${raw})`);
+  if (!Number.isFinite(value) || !Number.isInteger(value)) {
+    throw new UsageError(`--index must be an integer (got ${JSON.stringify(raw)})`);
   }
   return value;
 }
 
 export class UsageError extends Error {
   constructor(message: string) {
+    if (typeof message !== "string" || message.trim() === "") {
+      throw new TypeError(
+        `UsageError message must be a non-empty string (got ${describeValue(message)})`,
+      );
+    }
     super(message);
     this.name = "UsageError";
+  }
+}
+
+function assertArgv(argv: unknown): asserts argv is string[] {
+  if (!Array.isArray(argv)) {
+    throw new TypeError(
+      `runCli(argv, io): argv must be an array of strings (got ${describeValue(argv)})`,
+    );
+  }
+  for (let i = 0; i < argv.length; i += 1) {
+    if (typeof argv[i] !== "string") {
+      throw new TypeError(
+        `runCli(argv, io): argv[${i}] must be a string (got ${describeValue(argv[i])})`,
+      );
+    }
+  }
+}
+
+function assertIo(io: unknown): asserts io is CliIo {
+  if (io === null || typeof io !== "object") {
+    throw new TypeError(
+      `runCli(argv, io): io must be an object with stdout/stderr functions (got ${describeValue(io)})`,
+    );
+  }
+  const candidate = io as Partial<CliIo>;
+  if (typeof candidate.stdout !== "function") {
+    throw new TypeError(
+      `runCli(argv, io): io.stdout must be a function (got ${describeValue(candidate.stdout)})`,
+    );
+  }
+  if (typeof candidate.stderr !== "function") {
+    throw new TypeError(
+      `runCli(argv, io): io.stderr must be a function (got ${describeValue(candidate.stderr)})`,
+    );
   }
 }
 
@@ -78,6 +127,9 @@ export function runCli(
   argv: string[],
   io: CliIo = defaultIo,
 ): number {
+  assertArgv(argv);
+  assertIo(io);
+
   let values: {
     help?: boolean;
     version?: boolean;
@@ -115,14 +167,24 @@ export function runCli(
     return EXIT_SUCCESS;
   }
 
-  const [command, subject] = positionals;
+  const [command, subject, extra] = positionals;
 
   if (!command || command === "help") {
+    if (command === "help" && subject !== undefined) {
+      io.stderr(`Unexpected argument '${subject}'`);
+      io.stderr(`Try '${CLI_NAME} --help' for usage.`);
+      return EXIT_USAGE;
+    }
     io.stdout(helpText());
     return command ? EXIT_SUCCESS : EXIT_USAGE;
   }
 
   if (command === "version") {
+    if (subject !== undefined) {
+      io.stderr(`Unexpected argument '${subject}'`);
+      io.stderr(`Try '${CLI_NAME} --help' for usage.`);
+      return EXIT_USAGE;
+    }
     io.stdout(`${CLI_NAME} ${CLI_VERSION}`);
     return EXIT_SUCCESS;
   }
@@ -149,6 +211,9 @@ export function runCli(
         if (index !== undefined) {
           throw new UsageError("list does not accept --index");
         }
+        if (extra !== undefined) {
+          throw new UsageError(`Unexpected argument '${extra}'`);
+        }
         if (subject === "quacks") {
           for (const quack of QUACKS) io.stdout(quack);
           return EXIT_SUCCESS;
@@ -157,10 +222,14 @@ export function runCli(
           for (const fact of FACTS) io.stdout(fact);
           return EXIT_SUCCESS;
         }
-        throw new UsageError("list requires 'quacks' or 'facts'");
+        throw new UsageError(
+          "list requires exactly one catalog name: 'quacks' or 'facts'",
+        );
       }
       default:
-        throw new UsageError(`Unknown command '${command}'`);
+        throw new UsageError(
+          `Unknown command '${command}'. Expected quack, fact, list, help, or version.`,
+        );
     }
   } catch (error) {
     if (error instanceof UsageError) {
@@ -168,7 +237,7 @@ export function runCli(
       io.stderr(`Try '${CLI_NAME} --help' for usage.`);
       return EXIT_USAGE;
     }
-    if (error instanceof RangeError) {
+    if (error instanceof TypeError || error instanceof RangeError) {
       io.stderr(error.message);
       return EXIT_ERROR;
     }

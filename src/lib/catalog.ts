@@ -22,28 +22,80 @@ export const FACTS = [
 
 export const INITIAL_CAPTION = "Press for wisdom";
 
-export function pickQuack(random = Math.random): string {
-  return QUACKS[Math.floor(random() * QUACKS.length)];
+export type RandomSource = () => number;
+
+function describeValue(value: unknown): string {
+  if (typeof value === "string") return `string ${JSON.stringify(value)}`;
+  if (typeof value === "number") return `number ${value}`;
+  if (typeof value === "function") return "function";
+  if (value === null) return "null";
+  return `${typeof value}`;
+}
+
+function assertRandomSource(
+  random: unknown,
+  functionName: "pickQuack" | "pickFact",
+): asserts random is RandomSource {
+  if (typeof random !== "function") {
+    throw new TypeError(
+      `${functionName}(random): random must be a function that returns a number in [0, 1) (got ${describeValue(random)})`,
+    );
+  }
+}
+
+function readUnitInterval(
+  random: RandomSource,
+  functionName: "pickQuack" | "pickFact",
+): number {
+  const value = random();
+  if (typeof value !== "number" || Number.isNaN(value) || value < 0 || value >= 1) {
+    throw new RangeError(
+      `${functionName}(random): random() must return a number in [0, 1) (got ${describeValue(value)})`,
+    );
+  }
+  return value;
+}
+
+function assertCatalogIndex(
+  index: unknown,
+  length: number,
+  label: "Quack" | "Fact",
+): asserts index is number {
+  if (typeof index !== "number" || Number.isNaN(index)) {
+    throw new TypeError(
+      `${label} index must be a number (got ${describeValue(index)})`,
+    );
+  }
+  if (!Number.isInteger(index)) {
+    throw new RangeError(
+      `${label} index must be an integer (got ${index})`,
+    );
+  }
+  if (index < 0 || index >= length) {
+    throw new RangeError(
+      `${label} index out of range: expected 0..${length - 1}, got ${index}`,
+    );
+  }
+}
+
+export function pickQuack(random: RandomSource = Math.random): string {
+  assertRandomSource(random, "pickQuack");
+  const value = readUnitInterval(random, "pickQuack");
+  return QUACKS[Math.floor(value * QUACKS.length)];
+}
+
+export function pickFact(random: RandomSource = Math.random): string {
+  assertRandomSource(random, "pickFact");
+  const value = readUnitInterval(random, "pickFact");
+  return FACTS[Math.floor(value * FACTS.length)];
 }
 
 export function getQuack(index: number): string {
-  if (!Number.isInteger(index) || index < 0 || index >= QUACKS.length) {
-    throw new RangeError(
-      `Quack index must be an integer from 0 to ${QUACKS.length - 1} (got ${index})`,
-    );
-  }
+  assertCatalogIndex(index, QUACKS.length, "Quack");
   return QUACKS[index];
 }
 
 export function getFact(index: number): string {
-  if (!Number.isInteger(index) || index < 0 || index >= FACTS.length) {
-    throw new RangeError(
-      `Fact index must be an integer from 0 to ${FACTS.length - 1} (got ${index})`,
-    );
-  }
+  assertCatalogIndex(index, FACTS.length, "Fact");
   return FACTS[index];
-}
-
-export function pickFact(random = Math.random): string {
-  return FACTS[Math.floor(random() * FACTS.length)];
 }
