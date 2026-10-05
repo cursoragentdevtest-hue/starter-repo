@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { pickRandomElement } from "@/lib/arrays";
+import { useEffect, useRef, useState } from "react";
 
 const QUACKS = [
   "Quack!",
@@ -16,11 +17,26 @@ const QUACKS = [
 export function DuckButton() {
   const [quack, setQuack] = useState("Press for wisdom");
   const [wobble, setWobble] = useState(false);
+  const wobbleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (wobbleTimeoutRef.current !== null) {
+        clearTimeout(wobbleTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function handleClick() {
-    setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    setQuack(pickRandomElement(QUACKS));
     setWobble(true);
-    setTimeout(() => setWobble(false), 500);
+    if (wobbleTimeoutRef.current !== null) {
+      clearTimeout(wobbleTimeoutRef.current);
+    }
+    wobbleTimeoutRef.current = setTimeout(() => {
+      wobbleTimeoutRef.current = null;
+      setWobble(false);
+    }, 500);
   }
 
   return (

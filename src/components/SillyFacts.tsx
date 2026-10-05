@@ -1,5 +1,6 @@
 "use client";
 
+import { nextCircularIndex } from "@/lib/arrays";
 import { useEffect, useState } from "react";
 
 const FACTS = [
@@ -18,15 +19,26 @@ export function SillyFacts() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let fadeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const interval = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
-        setIndex((i) => (i + 1) % FACTS.length);
+      if (fadeTimeoutId !== null) {
+        clearTimeout(fadeTimeoutId);
+      }
+      fadeTimeoutId = setTimeout(() => {
+        fadeTimeoutId = null;
+        setIndex((i) => nextCircularIndex(i, FACTS.length));
         setVisible(true);
       }, 300);
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (fadeTimeoutId !== null) {
+        clearTimeout(fadeTimeoutId);
+      }
+    };
   }, []);
 
   return (
