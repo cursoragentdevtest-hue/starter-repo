@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EXIT_OK, EXIT_USAGE, runCli } from "./run-cli";
+import { EXIT_ERROR, EXIT_OK, EXIT_USAGE, runCli } from "./run-cli";
 import { QUACKS } from "@/lib/content";
 
 function captureIo() {
@@ -62,6 +62,45 @@ describe("runCli", () => {
   it("returns usage for invalid fact index", () => {
     const { io, stderr } = captureIo();
     expect(runCli(["fact", "--index", "99"], io)).toBe(EXIT_USAGE);
-    expect(stderr()).toContain("index must be");
+    expect(stderr()).toContain("between 0 and");
+  });
+
+  it("returns usage for non-numeric fact index", () => {
+    const { io, stderr } = captureIo();
+    expect(runCli(["fact", "--index", "nope"], io)).toBe(EXIT_USAGE);
+    expect(stderr()).toContain("received \"nope\"");
+  });
+
+  it("returns usage when list omits flags", () => {
+    const { io, stderr } = captureIo();
+    expect(runCli(["list"], io)).toBe(EXIT_USAGE);
+    expect(stderr()).toContain("exactly one of --quacks or --facts");
+  });
+
+  it("returns error for invalid argv shape", () => {
+    const { io, stderr } = captureIo();
+    expect(runCli(null as unknown as string[], io)).toBe(EXIT_ERROR);
+    expect(stderr()).toContain("runCli: argv must be an array of strings");
+  });
+
+  it("returns error for invalid io", () => {
+    const stderr: string[] = [];
+    const brokenIo = {
+      stdout: "nope",
+      stderr: (line: string) => stderr.push(line),
+    } as unknown as {
+      stdout: (line: string) => void;
+      stderr: (line: string) => void;
+    };
+    expect(runCli(["quack"], brokenIo)).toBe(EXIT_ERROR);
+    expect(stderr.join("\n")).toContain("io.stdout and io.stderr must be functions");
+  });
+
+  it("returns error when options.random is invalid", () => {
+    const { io, stderr } = captureIo();
+    expect(
+      runCli(["quack"], io, { random: "bad" as unknown as () => number }),
+    ).toBe(EXIT_ERROR);
+    expect(stderr()).toContain("options.random must be a function");
   });
 });

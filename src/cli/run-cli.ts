@@ -1,6 +1,7 @@
+import { ValidationError } from "@/lib/assert";
 import { parseArgs } from "node:util";
 import { nextCircularIndex, pickRandomElement } from "@/lib/arrays";
-import { FACTS, QUACKS } from "@/lib/content";
+import { FACTS, QUACKS, getFactAt } from "@/lib/content";
 
 export const EXIT_OK = 0;
 export const EXIT_ERROR = 1;
@@ -46,12 +47,30 @@ function printHelp(io: CliIO): number {
 }
 
 function parseFactIndex(raw: string, io: CliIO): number | null {
-  const index = Number.parseInt(raw, 10);
-  if (!Number.isInteger(index) || index < 0 || index >= FACTS.length) {
-    io.stderr(`error: index must be an integer from 0 to ${FACTS.length - 1}`);
+  const trimmed = raw.trim();
+  if (trimmed.length === 0 || !/^-?\d+$/.test(trimmed)) {
+    io.stderr(
+      `error: index must be an integer from 0 to ${FACTS.length - 1}, received ${JSON.stringify(raw)}`,
+    );
     return null;
   }
-  return index;
+  return Number.parseInt(trimmed, 10);
+}
+
+function validateFactIndex(index: number, io: CliIO): number | null {
+  try {
+    getFactAt(index);
+    return index;
+  } catch (err) {
+    const message =
+      err instanceof ValidationError
+        ? err.message.replace(/^getFactAt: /, "")
+        : err instanceof Error
+          ? err.message
+          : String(err);
+    io.stderr(`error: ${message}`);
+    return null;
+  }
 }
 
 function runQuack(io: CliIO, options: CliOptions): number {
@@ -79,21 +98,32 @@ function runFact(
       io.stderr("error: use either --index or --next, not both");
       return EXIT_USAGE;
     }
-    const current = parseFactIndex(values.next, io);
+    const parsed = parseFactIndex(values.next, io);
+    if (parsed === null) {
+      return EXIT_USAGE;
+    }
+    const current = validateFactIndex(parsed, io);
     if (current === null) {
       return EXIT_USAGE;
     }
     const next = nextCircularIndex(current, FACTS.length);
-    io.stdout(FACTS[next]);
+    io.stdout(getFactAt(next));
     return EXIT_OK;
   }
 
-  const index =
-    values.index === undefined ? 0 : parseFactIndex(values.index, io);
+  if (values.index === undefined) {
+    io.stdout(getFactAt(0));
+    return EXIT_OK;
+  }
+  const parsed = parseFactIndex(values.index, io);
+  if (parsed === null) {
+    return EXIT_USAGE;
+  }
+  const index = validateFactIndex(parsed, io);
   if (index === null) {
     return EXIT_USAGE;
   }
-  io.stdout(FACTS[index]);
+  io.stdout(getFactAt(index));
   return EXIT_OK;
 }
 
@@ -123,26 +153,68 @@ function runList(args: string[], io: CliIO): number {
   return EXIT_OK;
 }
 
+function validateCliIo(io: CliIO): void {
+  if (io === null || typeof io !== "object") {
+    throw new ValidationError("runCli", "io must be an object with stdout and stderr");
+  }
+  if (typeof io.stdout !== "function" || typeof io.stderr !== "function") {
+    throw new ValidationError(
+      "runCli",
+      "io.stdout and io.stderr must be functions",
+    );
+  }
+}
+
+function validateArgv(argv: unknown): string[] {
+  if (!Array.isArray(argv)) {
+    throw new ValidationError("runCli", "argv must be an array of strings");
+  }
+  for (let i = 0; i < argv.length; i++) {
+    if (typeof argv[i] !== "string") {
+      throw new ValidationError("runCli", `argv[${i}] must be a string`);
+    }
+  }
+  return argv;
+}
+
+function validateCliOptions(options: CliOptions): CliOptions {
+  if (options === null || typeof options !== "object") {
+    throw new ValidationError("runCli", "options must be an object");
+  }
+  if (options.random !== undefined && typeof options.random !== "function") {
+    throw new ValidationError("runCli", "options.random must be a function when provided");
+  }
+  return options;
+}
+
 /** Run the CLI; returns a process exit code. */
 export function runCli(
   argv: string[],
   io: CliIO,
   options: CliOptions = {},
 ): number {
-  if (argv.length === 0 || argv[0] === "help" || argv[0] === "--help" || argv[0] === "-h") {
-    return printHelp(io);
-  }
-
-  const [command, ...rest] = argv;
-
   try {
+    validateCliIo(io);
+    const safeArgv = validateArgv(argv);
+    const safeOptions = validateCliOptions(options);
+
+    if (
+      safeArgv.length === 0 ||
+      safeArgv[0] === "help" ||
+      safeArgv[0] === "--help" ||
+      safeArgv[0] === "-h"
+    ) {
+      return printHelp(io);
+    }
+
+    const [command, ...rest] = safeArgv;
     switch (command) {
       case "quack":
         if (rest.length > 0) {
           io.stderr("error: quack does not accept arguments");
           return EXIT_USAGE;
         }
-        return runQuack(io, options);
+        return runQuack(io, safeOptions);
       case "fact":
         return runFact(rest, io);
       case "list":
@@ -154,16 +226,20 @@ export function runCli(
     }
   } catch (err) {
     const code =
-      err instanceof Error && "code" in err && err.code === "ERR_PARSE_ARGS_INVALID_OPTION_VALUE"
-        ? EXIT_USAGE
-        : err instanceof Error &&
-            "code" in err &&
-            typeof err.code === "string" &&
-            err.code.startsWith("ERR_PARSE_ARGS")
+      err instanceof ValidationError
+        ? EXIT_ERROR
+        : err instanceof Error && "code" in err && err.code === "ERR_PARSE_ARGS_INVALID_OPTION_VALUE"
           ? EXIT_USAGE
-          : EXIT_ERROR;
+          : err instanceof Error &&
+              "code" in err &&
+              typeof err.code === "string" &&
+              err.code.startsWith("ERR_PARSE_ARGS")
+            ? EXIT_USAGE
+            : EXIT_ERROR;
     const message = err instanceof Error ? err.message : String(err);
-    io.stderr(`error: ${message}`);
+    if (typeof io?.stderr === "function") {
+      io.stderr(`error: ${message}`);
+    }
     return code;
   }
 }

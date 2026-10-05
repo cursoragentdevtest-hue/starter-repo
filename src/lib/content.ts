@@ -1,3 +1,5 @@
+import { assertIndexInRange } from "@/lib/assert";
+
 export const QUACKS = [
   "Quack!",
   "Honk??",
@@ -19,3 +21,15 @@ export const FACTS = [
   "Hot reload works. Your motivation might not.",
   "This starter repo is 90% whimsy, 10% dependencies.",
 ] as const;
+
+/** Returns the silly fact at `index` (0-based). */
+export function getFactAt(index: number): string {
+  const safeIndex = assertIndexInRange("getFactAt", index, FACTS.length);
+  return FACTS[safeIndex];
+}
+
+/** Returns the duck quip at `index` (0-based). */
+export function getQuackAt(index: number): string {
+  const safeIndex = assertIndexInRange("getQuackAt", index, QUACKS.length);
+  return QUACKS[safeIndex];
+}
