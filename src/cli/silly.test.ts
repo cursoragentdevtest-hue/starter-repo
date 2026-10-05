@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { FACTS } from "../content/facts";
 import { QUACKS } from "../content/quacks";
 import { version } from "../../package.json";
-import { EXIT_FAILURE, EXIT_OK, EXIT_USAGE, HELP, run } from "./silly";
+import { type CliIO, EXIT_FAILURE, EXIT_OK, EXIT_USAGE, HELP, MAX_COUNT, run } from "./silly";
 
 function invoke(argv: string[], random: () => number = () => 0) {
   let stdout = "";
@@ -72,8 +72,13 @@ describe("run", () => {
     [["fact", String(FACTS.length + 1)], `between 1 and ${FACTS.length}`],
     [["fact", "1", "2"], 'unexpected argument for "fact": 2'],
     [["fact", "--count", "2"], '--count is only valid with "quack"'],
-    [["list"], 'list expects "quacks" or "facts"'],
-    [["list", "ducks"], 'list expects "quacks" or "facts"'],
+    [["quack", "--count", String(MAX_COUNT + 1)], `--count must be at most ${MAX_COUNT}, got ${MAX_COUNT + 1}`],
+    [["quack", "--count", "99999999999999999999"], `--count must be at most ${MAX_COUNT}`],
+    [["list"], 'list expects "quacks" or "facts", got nothing'],
+    [["list", "ducks"], 'list expects "quacks" or "facts", got "ducks"'],
+    [["list", "constructor"], 'got "constructor"'],
+    [["list", "toString"], 'got "toString"'],
+    [["list", "__proto__"], 'got "__proto__"'],
   ])("rejects %j with a usage error", (argv, message) => {
     const { code, stdout, stderr } = invoke(argv);
     expect(code).toBe(EXIT_USAGE);
@@ -89,6 +94,48 @@ describe("run", () => {
     expect(code).toBe(EXIT_FAILURE);
     expect(stdout).toBe("");
     expect(stderr).toBe("silly: unexpected error: entropy depleted\n");
+  });
+
+  it("accepts the maximum --count", () => {
+    const { code, stdout } = invoke(["quack", "--count", String(MAX_COUNT)]);
+    expect(code).toBe(EXIT_OK);
+    expect(stdout.trimEnd().split("\n")).toHaveLength(MAX_COUNT);
+  });
+
+  it.each([
+    [["quack"], "pickDifferent"],
+    [["fact"], "pickRandom"],
+  ])("exits 1 with a clear message when the random source misbehaves (%j)", (argv, fn) => {
+    const { code, stdout, stderr } = invoke(argv, () => 1);
+    expect(code).toBe(EXIT_FAILURE);
+    expect(stdout).toBe("");
+    expect(stderr).toBe(
+      `silly: unexpected error: ${fn}: random() must return a number in [0, 1), got 1\n`,
+    );
+  });
+});
+
+describe("run input validation", () => {
+  const io = { stdout: () => {}, stderr: () => {} };
+
+  it.each([
+    [undefined, io, "run: argv must be an array of strings, got undefined"],
+    ["quack", io, "run: argv must be an array of strings, got string"],
+    [["quack", 3], io, "run: argv[1] must be a string, got number"],
+    [["quack"], undefined, "run: io must be an object with stdout and stderr functions"],
+    [["quack"], null, "run: io must be an object with stdout and stderr functions"],
+    [["quack"], { stderr: () => {} }, "run: io.stdout must be a function, got undefined"],
+    [["quack"], { stdout: () => {}, stderr: "x" }, "run: io.stderr must be a function, got string"],
+    [["quack"], { ...io, random: 0.5 }, "run: io.random must be a function when provided, got number"],
+  ])("throws a TypeError for an invalid call (%j, %j)", (argv, badIo, message) => {
+    expect(() => run(argv as string[], badIo as CliIO)).toThrow(new TypeError(message));
+  });
+
+  it("does not write anything when the call itself is invalid", () => {
+    const writes: string[] = [];
+    const recordingIo = { stdout: (t: string) => writes.push(t), stderr: (t: string) => writes.push(t) };
+    expect(() => run([1] as unknown as string[], recordingIo)).toThrow(TypeError);
+    expect(writes).toEqual([]);
   });
 });
 

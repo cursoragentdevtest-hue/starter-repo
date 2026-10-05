@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { QUACKS } from "@/content/quacks";
-import { pickDifferent } from "@/lib/pickDifferent";
+import { pickDifferent } from "@/lib/random";
 
 export function DuckButton() {
   const [quack, setQuack] = useState("Press for wisdom");

@@ -1,17 +1,18 @@
 import { parseArgs } from "node:util";
 import { FACTS } from "../content/facts";
 import { QUACKS } from "../content/quacks";
-import { pickDifferent } from "../lib/pickDifferent";
+import { pickDifferent, pickRandom } from "../lib/random";
 import { version } from "../../package.json";
 
 export const EXIT_OK = 0;
 export const EXIT_FAILURE = 1;
 export const EXIT_USAGE = 2;
+export const MAX_COUNT = 100;
 
 export const HELP = `Usage: silly <command> [options]
 
 Commands:
-  quack [-n, --count N]    Print N random quacks (default 1), never the same twice in a row
+  quack [-n, --count N]    Print N random quacks (default 1, max ${MAX_COUNT}), never the same twice in a row
   fact [N]                 Print silly fact number N (1-${FACTS.length}), or a random one
   list <quacks|facts>      Print every quack or fact, numbered
   help                     Show this help
@@ -44,6 +45,30 @@ function parsePositiveInt(value: string, what: string): number {
     throw new UsageError(`${what} must be a positive integer, got "${value}"`);
   }
   return Number(value);
+}
+
+function assertValidCall(argv: unknown, io: unknown): asserts io is CliIO {
+  if (!Array.isArray(argv)) {
+    throw new TypeError(`run: argv must be an array of strings, got ${typeof argv}`);
+  }
+  const badIndex = argv.findIndex((arg) => typeof arg !== "string");
+  if (badIndex !== -1) {
+    throw new TypeError(
+      `run: argv[${badIndex}] must be a string, got ${typeof argv[badIndex]}`,
+    );
+  }
+  if (typeof io !== "object" || io === null) {
+    throw new TypeError(`run: io must be an object with stdout and stderr functions`);
+  }
+  const { stdout, stderr, random } = io as Record<string, unknown>;
+  for (const [name, value] of [["stdout", stdout], ["stderr", stderr]] as const) {
+    if (typeof value !== "function") {
+      throw new TypeError(`run: io.${name} must be a function, got ${typeof value}`);
+    }
+  }
+  if (random !== undefined && typeof random !== "function") {
+    throw new TypeError(`run: io.random must be a function when provided, got ${typeof random}`);
+  }
 }
 
 function expectArgs(command: string, args: string[], max: number) {
@@ -88,6 +113,9 @@ function execute(argv: string[], io: CliIO): number {
     case "quack": {
       expectArgs(command, args, 0);
       const count = values.count === undefined ? 1 : parsePositiveInt(values.count, "--count");
+      if (count > MAX_COUNT) {
+        throw new UsageError(`--count must be at most ${MAX_COUNT}, got ${values.count}`);
+      }
       let quack = "";
       const lines: string[] = [];
       for (let i = 0; i < count; i++) {
@@ -100,7 +128,7 @@ function execute(argv: string[], io: CliIO): number {
     case "fact": {
       expectArgs(command, args, 1);
       if (args.length === 0) {
-        io.stdout(`${FACTS[Math.floor(random() * FACTS.length)]}\n`);
+        io.stdout(`${pickRandom(FACTS, random)}\n`);
         return EXIT_OK;
       }
       const n = parsePositiveInt(args[0], "fact number");
@@ -112,10 +140,13 @@ function execute(argv: string[], io: CliIO): number {
     }
     case "list": {
       expectArgs(command, args, 1);
-      const items = args[0] === undefined ? undefined : COLLECTIONS[args[0]];
-      if (!items) {
-        throw new UsageError(`list expects "quacks" or "facts"`);
+      const name = args[0];
+      if (name === undefined || !Object.hasOwn(COLLECTIONS, name)) {
+        throw new UsageError(
+          `list expects "quacks" or "facts", got ${name === undefined ? "nothing" : `"${name}"`}`,
+        );
       }
+      const items = COLLECTIONS[name];
       io.stdout(items.map((item, i) => `${i + 1}. ${item}`).join("\n") + "\n");
       return EXIT_OK;
     }
@@ -133,6 +164,7 @@ function isParseArgsError(error: unknown): error is Error {
 }
 
 export function run(argv: string[], io: CliIO): number {
+  assertValidCall(argv, io);
   try {
     return execute(argv, io);
   } catch (error) {
