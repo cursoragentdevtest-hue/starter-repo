@@ -1,5 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DuckButton, INITIAL_CAPTION, QUACKS } from "./DuckButton";
 
@@ -14,14 +13,11 @@ describe("DuckButton", () => {
     vi.restoreAllMocks();
   });
 
-  it("clears the wobble timeout on unmount so no state update fires later", async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime.bind(vi),
-    });
+  it("clears the wobble timeout on unmount so no state update fires later", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const { unmount } = render(<DuckButton />);
-    await user.click(screen.getByRole("button", { name: "Quack button" }));
+    fireEvent.click(screen.getByRole("button", { name: "Quack button" }));
     expect(screen.getByRole("button")).toHaveClass("wobble");
 
     unmount();
@@ -33,22 +29,19 @@ describe("DuckButton", () => {
     expect(consoleError).not.toHaveBeenCalled();
   });
 
-  it("replaces a pending wobble timeout when clicked again", async () => {
-    const user = userEvent.setup({
-      advanceTimers: vi.advanceTimersByTime.bind(vi),
-    });
+  it("replaces a pending wobble timeout when clicked again", () => {
     vi.spyOn(Math, "random").mockReturnValue(0);
 
     render(<DuckButton />);
     const button = screen.getByRole("button", { name: "Quack button" });
 
-    await user.click(button);
+    fireEvent.click(button);
     act(() => {
       vi.advanceTimersByTime(200);
     });
     expect(button).toHaveClass("wobble");
 
-    await user.click(button);
+    fireEvent.click(button);
     act(() => {
       vi.advanceTimersByTime(200);
     });
