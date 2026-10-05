@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const FACTS = [
+export const FACTS = [
   "This app has zero business logic and infinite vibes.",
   "Next.js can render on the server. This duck cannot.",
   "TypeScript knows your types. The duck knows your secrets.",
@@ -13,20 +13,28 @@ const FACTS = [
   "This starter repo is 90% whimsy, 10% dependencies.",
 ];
 
+export const ROTATE_MS = 4000;
+// Must match the `duration-300` transition class below.
+export const FADE_MS = 300;
+
 export function SillyFacts() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let fadeTimeout: ReturnType<typeof setTimeout> | undefined;
     const interval = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
+      fadeTimeout = setTimeout(() => {
         setIndex((i) => (i + 1) % FACTS.length);
         setVisible(true);
-      }, 300);
-    }, 4000);
+      }, FADE_MS);
+    }, ROTATE_MS);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(fadeTimeout);
+    };
   }, []);
 
   return (
