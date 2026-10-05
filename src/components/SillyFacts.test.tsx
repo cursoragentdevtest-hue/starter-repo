@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { FACTS, FADE_MS, ROTATE_MS, SillyFacts } from "./SillyFacts";
+import { FACTS } from "@/lib/facts";
+import { FADE_MS, ROTATE_MS, SillyFacts } from "./SillyFacts";
 
 beforeEach(() => {
   vi.useFakeTimers();

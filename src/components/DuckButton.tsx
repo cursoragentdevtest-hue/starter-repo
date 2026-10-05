@@ -1,25 +1,14 @@
 "use client";
 
 import { useState } from "react";
-
-const QUACKS = [
-  "Quack!",
-  "Honk??",
-  "Bread acquired.",
-  "Professional waddler.",
-  "404: dignity not found.",
-  "This button does nothing. Like my degree.",
-  "You're doing great, probably.",
-  "Have you tried turning the duck off and on again?",
-];
+import { pickQuack } from "@/lib/quacks";
 
 export function DuckButton() {
   const [quack, setQuack] = useState("Press for wisdom");
   const [wobble, setWobble] = useState(false);
 
   function handleClick() {
-    const choices = QUACKS.filter((q) => q !== quack);
-    setQuack(choices[Math.floor(Math.random() * choices.length)]);
+    setQuack(pickQuack(quack));
     setWobble(true);
   }
 
