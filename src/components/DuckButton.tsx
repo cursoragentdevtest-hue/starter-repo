@@ -1,18 +1,8 @@
 "use client";
 
 import { pickRandomElement } from "@/lib/arrays";
+import { QUACKS } from "@/lib/content";
 import { useEffect, useRef, useState } from "react";
-
-const QUACKS = [
-  "Quack!",
-  "Honk??",
-  "Bread acquired.",
-  "Professional waddler.",
-  "404: dignity not found.",
-  "This button does nothing. Like my degree.",
-  "You're doing great, probably.",
-  "Have you tried turning the duck off and on again?",
-];
 
 export function DuckButton() {
   const [quack, setQuack] = useState("Press for wisdom");

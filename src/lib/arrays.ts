@@ -10,10 +10,13 @@ export function nextCircularIndex(current: number, length: number): number {
 }
 
 /** Picks a uniform random element from a non-empty readonly array. */
-export function pickRandomElement<T>(items: readonly T[]): T {
+export function pickRandomElement<T>(
+  items: readonly T[],
+  random: () => number = Math.random,
+): T {
   if (items.length === 0) {
     throw new RangeError("items must not be empty");
   }
-  const index = Math.floor(Math.random() * items.length);
+  const index = Math.floor(random() * items.length);
   return items[index];
 }
