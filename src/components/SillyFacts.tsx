@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const FACTS = [
+export const FACTS = [
   "This app has zero business logic and infinite vibes.",
   "Next.js can render on the server. This duck cannot.",
   "TypeScript knows your types. The duck knows your secrets.",
@@ -11,27 +11,42 @@ const FACTS = [
   "Somewhere, a senior engineer is crying over this architecture.",
   "Hot reload works. Your motivation might not.",
   "This starter repo is 90% whimsy, 10% dependencies.",
-];
+] as const;
 
 export function SillyFacts() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let fadeTimeout: ReturnType<typeof setTimeout> | null = null;
+
     const interval = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
+
+      if (fadeTimeout !== null) {
+        clearTimeout(fadeTimeout);
+      }
+
+      fadeTimeout = setTimeout(() => {
         setIndex((i) => (i + 1) % FACTS.length);
         setVisible(true);
+        fadeTimeout = null;
       }, 300);
     }, 4000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (fadeTimeout !== null) {
+        clearTimeout(fadeTimeout);
+      }
+    };
   }, []);
 
   return (
     <p
       className={`max-w-lg text-center text-lg italic text-amber-800/80 transition-opacity duration-300 dark:text-amber-100/80 ${visible ? "opacity-100" : "opacity-0"}`}
+      aria-live="polite"
+      aria-atomic="true"
     >
       &ldquo;{FACTS[index]}&rdquo;
     </p>

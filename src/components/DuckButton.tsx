@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const QUACKS = [
+export const QUACKS = [
   "Quack!",
   "Honk??",
   "Bread acquired.",
@@ -11,16 +11,35 @@ const QUACKS = [
   "This button does nothing. Like my degree.",
   "You're doing great, probably.",
   "Have you tried turning the duck off and on again?",
-];
+] as const;
+
+export const INITIAL_CAPTION = "Press for wisdom";
 
 export function DuckButton() {
-  const [quack, setQuack] = useState("Press for wisdom");
+  const [caption, setCaption] = useState(INITIAL_CAPTION);
   const [wobble, setWobble] = useState(false);
+  const wobbleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (wobbleTimeoutRef.current !== null) {
+        clearTimeout(wobbleTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function handleClick() {
-    setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    setCaption(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
     setWobble(true);
-    setTimeout(() => setWobble(false), 500);
+
+    if (wobbleTimeoutRef.current !== null) {
+      clearTimeout(wobbleTimeoutRef.current);
+    }
+
+    wobbleTimeoutRef.current = setTimeout(() => {
+      setWobble(false);
+      wobbleTimeoutRef.current = null;
+    }, 500);
   }
 
   return (
@@ -33,8 +52,11 @@ export function DuckButton() {
       >
         🦆
       </button>
-      <p className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70">
-        {quack}
+      <p
+        className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70"
+        aria-live="polite"
+      >
+        {caption}
       </p>
     </div>
   );
