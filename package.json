@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "silly": "tsx src/cli/main.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -29,6 +30,7 @@
     "eslint-config-next": "16.2.9",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.3"
   }

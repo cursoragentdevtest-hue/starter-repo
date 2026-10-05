@@ -1,6 +1,6 @@
 // jsdom has no AnimationEvent, which makes react-dom listen for `webkitAnimationEnd`
 // instead of `animationend`. This must load before react-dom is first imported.
-if (typeof window.AnimationEvent === "undefined") {
+if (typeof window !== "undefined" && typeof window.AnimationEvent === "undefined") {
   window.AnimationEvent = class AnimationEvent extends Event {
     readonly animationName: string;
     readonly elapsedTime: number;
