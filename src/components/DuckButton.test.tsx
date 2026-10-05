@@ -8,6 +8,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 function getDuck() {
@@ -43,6 +44,29 @@ test("an earlier click does not cut a later wobble short", () => {
   fireEvent.click(getDuck());
   advance(300);
   expect(getDuck().classList).toContain("wobble");
+});
+
+test("never shows the same quack twice in a row", () => {
+  vi.spyOn(Math, "random").mockReturnValue(0);
+  render(<DuckButton />);
+
+  const seen: string[] = [];
+  for (let i = 0; i < 4; i++) {
+    fireEvent.click(getDuck());
+    seen.push(screen.getByRole("status").textContent ?? "");
+  }
+
+  for (let i = 1; i < seen.length; i++) {
+    expect(seen[i]).not.toBe(seen[i - 1]);
+  }
+});
+
+test("announces each quack through a status region", () => {
+  render(<DuckButton />);
+
+  expect(screen.getByRole("status").textContent).toBe("Press for wisdom");
+  fireEvent.click(getDuck());
+  expect(screen.getByRole("status").textContent).not.toBe("Press for wisdom");
 });
 
 test("leaves no pending timers when unmounted mid-wobble", () => {

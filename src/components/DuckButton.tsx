@@ -18,7 +18,8 @@ export function DuckButton() {
   const [wobble, setWobble] = useState(false);
 
   function handleClick() {
-    setQuack(QUACKS[Math.floor(Math.random() * QUACKS.length)]);
+    const choices = QUACKS.filter((q) => q !== quack);
+    setQuack(choices[Math.floor(Math.random() * choices.length)]);
     setWobble(true);
   }
 
@@ -33,7 +34,7 @@ export function DuckButton() {
       >
         🦆
       </button>
-      <p className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70">
+      <p role="status" className="max-w-xs text-center text-sm font-mono text-amber-900/70 dark:text-amber-200/70">
         {quack}
       </p>
     </div>
