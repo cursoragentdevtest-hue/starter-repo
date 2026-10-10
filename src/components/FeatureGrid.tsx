@@ -13,7 +13,7 @@ const features = [
   },
   {
     title: "Routed",
-    body: "App Router pages, layouts, and one extremely important /duck.",
+    body: "App Router: one home page wrapped by a shared layout.",
   },
   {
     title: "Quackable",

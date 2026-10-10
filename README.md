@@ -27,6 +27,7 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 | `npm run build`| Build for production      |
 | `npm run start`| Run production build      |
 | `npm run lint` | Lint (the duck is exempt) |
+| `npm test`     | Run the Vitest library tests |
 
 ## License
 

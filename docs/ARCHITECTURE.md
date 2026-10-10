@@ -1,7 +1,7 @@
 # Architecture
 
 Silly Starter is a small Next.js App Router application. The product surface
-is a single home page and a `/duck` route. Next to that, `src/lib/` holds
+is a single home page. Next to that, `src/lib/` holds
 pure TypeScript utilities with colocated Vitest files. Nothing in the UI
 imports the library yet; the modules are a local toolbox with their own
 tests.
@@ -39,7 +39,6 @@ App Router files:
 | `layout.tsx` | Root layout: html, body, Geist fonts, metadata |
 | `page.tsx` | Home route. Composes Hero, DuckButton, SillyFacts, FeatureGrid |
 | `globals.css` | Tailwind v4 import and a couple of float animations |
-| `duck/page.tsx` | Standalone route that only exists to say quack |
 
 `page.tsx` is a Server Component. It renders the gradient shell and the
 floating emoji, then delegates the readable sections to components. The
@@ -48,8 +47,8 @@ home page does not fetch data and does not use client state of its own.
 clicks and local React state.
 
 `layout.tsx` loads Geist Sans and Geist Mono through `next/font/google` and
-exposes them as CSS variables. Metadata title and description live here, so
-both routes share them.
+exposes them as CSS variables. Metadata title and description live here
+and apply to the home page.
 
 `globals.css` starts with `@import "tailwindcss"` and `@theme inline` for
 the font variables. The float keyframes used by the home page background
@@ -61,17 +60,17 @@ live in the same file.
 | --- | --- | --- |
 | `Hero` | server | Eyebrow, title, and intro paragraph |
 | `FeatureGrid` | server | Six feature cards in a responsive grid |
-| `DuckButton` | client | Button that navigates to `/duck` |
-| `SillyFacts` | client | Cycles a short list of facts |
+| `DuckButton` | client | Button that swaps the caption for a random quack |
+| `SillyFacts` | client | Rotates a short list of facts on a timer |
 
 `Hero` and `FeatureGrid` were extracted from the home page so the route
 file stays a layout of sections. `FeatureGrid` owns the feature copy: six
 cards (Fast-ish, Styled, Typed, Routed, Quackable, Packaged) in one, two,
 or three columns depending on the viewport.
 
-`DuckButton` uses `useRouter().push("/duck")`. `SillyFacts` keeps an index
-in `useState` and advances it when the button is pressed. Both files begin
-with `"use client"`.
+`DuckButton` keeps the current quack and a short wobble flag in `useState`.
+`SillyFacts` advances its fact index on a four-second interval. Both files
+begin with `"use client"`.
 
 ## `src/lib`
 
@@ -168,7 +167,7 @@ per key and then forgets it.
 ## Request path
 
 1. `next dev` or `next start` receives the HTTP request.
-2. The App Router matches `src/app/page.tsx` or `src/app/duck/page.tsx`.
+2. The App Router matches `src/app/page.tsx`.
 3. The root layout wraps the page with fonts and the amber body styles.
 4. Server Components render to HTML. Client components hydrate on the
    browser and attach their click handlers.
@@ -199,10 +198,9 @@ async tests use Vitest fake timers where the delay is the subject
 subject (`mapLimit`, `createMutex`).
 
 UI behavior is still checked by running the dev server and exercising the
-home page and `/duck`. The component split is presentational, so the
-assertions that matter are: the hero copy is visible, six feature cards
-render, the fact button advances the fact, and the duck button lands on
-`/duck`.
+home page. The component split is presentational, so the assertions that
+matter are: the hero copy is visible, six feature cards render, a fact is
+on screen, and the duck button replaces its caption.
 
 A test that needs a calendar date goes through `parseISODate` so the
 expected instant is UTC midnight. A test that needs "now" passes an
