@@ -1,4 +1,6 @@
 import { DuckButton } from "@/components/DuckButton";
+import { FeatureGrid } from "@/components/FeatureGrid";
+import { Hero } from "@/components/Hero";
 import { SillyFacts } from "@/components/SillyFacts";
 
 export default function Home() {
@@ -12,38 +14,13 @@ export default function Home() {
       </div>
 
       <main className="relative z-10 flex max-w-2xl flex-col items-center gap-10 text-center">
-        <div className="space-y-3">
-          <p className="font-mono text-sm uppercase tracking-[0.3em] text-amber-600 dark:text-amber-400">
-            Officially Unofficial
-          </p>
-          <h1 className="text-5xl font-black tracking-tight text-amber-950 dark:text-amber-50 sm:text-6xl">
-            Silly Starter™
-          </h1>
-          <p className="text-xl text-amber-800/70 dark:text-amber-200/70">
-            A Next.js app that absolutely does not take itself seriously.
-          </p>
-        </div>
+        <Hero />
 
         <DuckButton />
 
         <SillyFacts />
 
-        <div className="grid w-full gap-4 sm:grid-cols-3">
-          {[
-            { emoji: "⚡", label: "Fast-ish", desc: "React 19. Probably fine." },
-            { emoji: "🎨", label: "Styled", desc: "Tailwind included. Duck approved." },
-            { emoji: "🤷", label: "Typed", desc: "TypeScript for your mistakes." },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border-2 border-dashed border-amber-300/60 bg-white/60 p-4 backdrop-blur-sm dark:border-amber-700/60 dark:bg-amber-950/40"
-            >
-              <div className="text-2xl">{item.emoji}</div>
-              <div className="mt-1 font-bold text-amber-950 dark:text-amber-50">{item.label}</div>
-              <div className="text-sm text-amber-800/60 dark:text-amber-200/60">{item.desc}</div>
-            </div>
-          ))}
-        </div>
+        <FeatureGrid />
 
         <footer className="font-mono text-xs text-amber-700/50 dark:text-amber-300/50">
           Built with npm, hope, and questionable life choices ·{" "}
