@@ -212,7 +212,7 @@ export function assignDefined<T extends Record<string, unknown>, U extends Recor
  * deepMerge({ a: { b: 1 } }, { a: { c: 2 } });
  * // => { a: { b: 1, c: 2 } }
  */
-export function deepMerge<T extends Record<string, unknown>>(...objects: readonly T[]): T {
+export function deepMerge(...objects: readonly Record<string, unknown>[]): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const object of objects) {
     for (const key of Object.keys(object)) {
@@ -229,7 +229,7 @@ export function deepMerge<T extends Record<string, unknown>>(...objects: readonl
       }
     }
   }
-  return result as T;
+  return result;
 }
 
 /**
