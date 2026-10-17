@@ -28,6 +28,11 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 | `npm run start`| Run production build      |
 | `npm run lint` | Lint (the duck is exempt) |
 
+## Ledger
+
+- **Report**: `src/ledger/report.ts` exports `formatLedgerReport(entries)` to format a compact text ledger report.
+- **Settle helper**: `python3 scripts/settle.py --infile ledger.json --outfile ledger.settled.json` settles open entries in a JSON list.
+
 ## License
 
 Do whatever you want. The duck doesn't care.
