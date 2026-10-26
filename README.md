@@ -33,6 +33,8 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 - Open an issue or a pull request against `main` for the change you want to make.
 - Run `npm install`, then `npm run dev`, and confirm the homepage and duck still behave.
 - Run `npm run lint` before you ask for a review.
+- Describe the change in the pull request, including anything you did not run.
+- Keep the edit limited to the files the change needs.
 
 ## License
 
