@@ -28,6 +28,12 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 | `npm run start`| Run production build      |
 | `npm run lint` | Lint (the duck is exempt) |
 
+## Contributing
+
+- Open an issue or a pull request against `main` for the change you want to make.
+- Run `npm install`, then `npm run dev`, and confirm the homepage and duck still behave.
+- Run `npm run lint` before you ask for a review.
+
 ## License
 
 Do whatever you want. The duck doesn't care.
