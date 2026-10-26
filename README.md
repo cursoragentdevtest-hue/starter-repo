@@ -35,6 +35,7 @@ Open [http://localhost:3000](http://localhost:3000) and press the duck. That's b
 - Run `npm run lint` before you ask for a review.
 - Describe the change in the pull request, including anything you did not run.
 - Keep the edit limited to the files the change needs.
+- When you file an issue, include what you expected, what happened, and how to reproduce it.
 
 ## License
 
